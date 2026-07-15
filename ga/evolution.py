@@ -23,18 +23,13 @@ class Evolution:
         self._best_fitness = 0.0
         self._best_genome = None
         self._plateau_count = 0
-        self._genome_length = self._compute_genome_length()
 
         np.random.seed(self._config.master_seed or np.random.randint(0, 2**31))
         self.population = create_population(
             size=self._config.population_size,
-            genome_length=self._genome_length,
+            hidden_size=self._config.hidden_layer_size,
         )
         self._fitnesses = self._evaluate_and_track(seed=self._seed_for(0))
-
-    def _compute_genome_length(self):
-        hs = self._config.hidden_layer_size
-        return (hs * 3) + hs + hs + 1
 
     def _seed_for(self, gen):
         ms = self._config.master_seed

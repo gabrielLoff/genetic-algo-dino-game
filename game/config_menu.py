@@ -17,10 +17,10 @@ class ConfigMenu:
 
     def _build_groups(self):
         groups = {}
-        for name, default, min_val, max_val, group, label, _type in PARAM_SPECS:
+        for name, default, min_val, max_val, group, label, _type, desc in PARAM_SPECS:
             if group not in groups:
                 groups[group] = {}
-            groups[group][name] = (default, min_val, max_val, label)
+            groups[group][name] = (default, min_val, max_val, label, desc)
         return [ParamGroup(name, params) for name, params in groups.items()]
 
     def adjust_param(self, multiplier):
@@ -29,7 +29,7 @@ class ConfigMenu:
         group = self._groups[self._selected_group]
         key = self._param_keys[self._selected_param]
         param_info = group.params[key]
-        default, min_val, max_val, _label = param_info
+        default, min_val, max_val, _label, _desc = param_info
 
         if isinstance(default, str) or default is None:
             return

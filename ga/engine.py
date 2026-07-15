@@ -1,8 +1,12 @@
 import numpy as np
+from nn.network import NeuralNetwork
 
 
-def create_population(size, genome_length):
-    return [np.random.randn(genome_length) * 0.1 for _ in range(size)]
+def create_population(size, hidden_size=6, input_size=3):
+    return [
+        NeuralNetwork(hidden_size=hidden_size, input_size=input_size).to_genome()
+        for _ in range(size)
+    ]
 
 
 def tournament_select(fitnesses, k):

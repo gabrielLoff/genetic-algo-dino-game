@@ -70,7 +70,7 @@ class TestGenerationRunner:
         config.population_size = 10
         config.time_cap_seconds = 0.1
         config.fitness_function = "survival_clearance"
-        population = create_population(size=10, genome_length=31)
+        population = create_population(size=10, hidden_size=6)
         np.random.seed(42)
         fitnesses, results = run_generation(config, population, seed=42, hidden_size=6)
         assert len(fitnesses) == 10
@@ -81,7 +81,7 @@ class TestGenerationRunner:
         config = Config()
         config.population_size = 5
         config.time_cap_seconds = 0.05
-        population = create_population(size=5, genome_length=31)
+        population = create_population(size=5, hidden_size=6)
         np.random.seed(42)
         fitnesses, results = run_generation(
             config, population, seed=42, hidden_size=6

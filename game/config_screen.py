@@ -69,7 +69,7 @@ class ConfigScreen:
         key = self._current_key()
         group = self._current_group()
         param_info = group.params[key]
-        default, min_val, max_val, _label = param_info
+        default, min_val, max_val, _label, _desc = param_info
 
         if isinstance(default, str):
             self._adjust_string_param(key, default, direction)
@@ -131,10 +131,13 @@ class ConfigScreen:
 
             if group_name == current_group_name:
                 group = self._current_group()
-                for pi, (key, (default, min_val, max_val, label)) in enumerate(group.params.items()):
+                selected_desc = ""
+                for pi, (key, (default, min_val, max_val, label, desc)) in enumerate(group.params.items()):
                     param_idx = next(i for i, (gi, pii, k) in enumerate(self._param_map)
                                      if gi == self._selected_group and pii == pi)
                     selected = param_idx == self._selected_param
+                    if selected:
+                        selected_desc = desc
 
                     prefix = ">" if selected else " "
                     value = getattr(self._config, key)
@@ -151,6 +154,10 @@ class ConfigScreen:
                     text = self._font.render(f"{prefix} {label:25s} {value_str:>12s}", True, color)
                     self._screen.blit(text, (30, y))
                     y += 20
+
+        if selected_desc:
+            desc_text = self._font.render(selected_desc, True, (100, 180, 255))
+            self._screen.blit(desc_text, (20, self._screen.get_height() - 50))
 
         hint = self._font.render("ENTER=Start  ESC=Quit  ARROWS=Navigate  LEFT/RIGHT=Adjust", True, (120, 120, 140))
         self._screen.blit(hint, (20, self._screen.get_height() - 30))

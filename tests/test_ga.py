@@ -10,14 +10,15 @@ from game.runner import RunResult
 
 
 def test_create_population_generates_correct_number():
-    pop = create_population(size=10, genome_length=31)
+    pop = create_population(size=10, hidden_size=6)
     assert len(pop) == 10
-    assert all(len(g) == 31 for g in pop)
+    genome_len = (6 * 3) + 6 + 6 + 1
+    assert all(len(g) == genome_len for g in pop)
 
 
 def test_create_population_uses_he_initialization():
     np.random.seed(42)
-    pop = create_population(size=5, genome_length=31)
+    pop = create_population(size=5, hidden_size=6)
     assert len(np.unique(np.concatenate(pop))) > 1
 
 
