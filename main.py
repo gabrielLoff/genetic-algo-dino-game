@@ -9,6 +9,31 @@ from replay.logger import LogStore
 from replay.player import record_run_to_log, ReplayPlayer
 
 
+def _record_best(evolution, config, log_store):
+    gen = evolution.generation - 1
+    ms = config.master_seed
+    seed = derive_seed(ms, gen) if ms is not None else gen
+    log = record_run_to_log(
+        evolution.best_genome, generation=gen,
+        brain_index=0, config=config, seed=seed,
+    )
+    if log.frame_count > 0:
+        log_store.save_best(gen, log)
+
+
+def _replay_best(config, log_store):
+    if not log_store._logs:
+        print("No replays available.")
+        return
+    best_log = max(log_store._logs.values(), key=lambda l: l.frame_count)
+    print(f"Replaying best brain ({best_log.frame_count} frames)... Press SPACE to stop.")
+    pygame.init()
+    screen = pygame.display.set_mode((config.window_width, config.window_height))
+    pygame.display.set_caption("GA Dino Game — Best Brain Replay")
+    ReplayPlayer(screen).play(best_log)
+    pygame.quit()
+
+
 def main():
     config = load_config("config.json")
     pygame.init()
@@ -16,12 +41,10 @@ def main():
 
     config_screen = ConfigScreen(config, screen)
     started = config_screen.run()
+    pygame.quit()
 
     if not started:
-        pygame.quit()
         return
-
-    pygame.quit()
 
     print(f"Starting evolution: population={config.population_size}, "
           f"max_generations={config.max_generations}, "
@@ -36,29 +59,42 @@ def main():
           f"avg={evolution.history[-1]['avg_fitness']:8.1f}")
     dashboard.update(evolution)
 
+    remaining = 0
     start = time.perf_counter()
 
     while not evolution.is_finished():
         evolution.step()
         dashboard.update(evolution)
 
-        gen = evolution.generation - 1
-        ms = config.master_seed
-        seed = derive_seed(ms, gen) if ms is not None else gen
-
         if evolution.best_genome is not None:
-            log = record_run_to_log(
-                evolution.best_genome,
-                generation=gen,
-                brain_index=0, config=config,
-                seed=seed,
-            )
-            if log.frame_count > 0:
-                log_store.save_best(evolution.generation - 1, log)
+            _record_best(evolution, config, log_store)
 
         last = evolution.history[-1]
         print(f"Gen {last['generation']:3d} | best={last['best_fitness']:8.1f} "
               f"avg={last['avg_fitness']:8.1f}")
+
+        remaining -= 1
+        if remaining > 0 and not evolution.is_finished():
+            continue
+
+        print("[Enter=next gen | N=run N more | R=replay best | Q=quit]")
+        while True:
+            cmd = input("> ").strip().lower()
+            if cmd == "":
+                remaining = 0
+                break
+            elif cmd == "q":
+                remaining = 0
+                evolution._plateau_count = config.plateau_generations + 1
+                break
+            elif cmd == "r":
+                _replay_best(config, log_store)
+                print("[Enter=next gen | N=run N more | R=replay best | Q=quit]")
+            elif cmd.isdigit():
+                remaining = int(cmd) - 1
+                break
+            else:
+                print("Unknown command. Enter=next, N=run N, R=replay, Q=quit")
 
     elapsed = time.perf_counter() - start
     print(f"\nEvolution finished in {elapsed:.1f}s after {evolution.generation} generations")
@@ -69,19 +105,8 @@ def main():
         print(f"Best genome: min={stats['min']:.4f} max={stats['max']:.4f} "
               f"mean={stats['mean']:.4f} std={stats['std']:.4f}")
 
-    best_log = max(log_store._logs.values(), key=lambda l: l.frame_count) if log_store._logs else None
-
     dashboard.close()
-
-    if best_log:
-        print(f"\nReplaying best brain ({best_log.frame_count} frames)...")
-        pygame.init()
-        screen = pygame.display.set_mode((config.window_width, config.window_height))
-        pygame.display.set_caption("GA Dino Game — Best Brain Replay")
-        player = ReplayPlayer(screen)
-        player.play(best_log)
-        pygame.quit()
-
+    _replay_best(config, log_store)
     log_store.cleanup()
 
 

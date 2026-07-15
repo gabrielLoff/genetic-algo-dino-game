@@ -32,4 +32,5 @@ class Dino:
             self.state = DINO_STATE_JUMPING
 
     def hitbox(self):
-        return inset_hitbox(self.x, self.y, 40, 50, self._collision_inset)
+        top = self.y - 50
+        return inset_hitbox(self.x, top, 40, 50, self._collision_inset)
