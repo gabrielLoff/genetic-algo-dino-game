@@ -91,7 +91,7 @@ def record_run_to_log(genome, generation, brain_index, config, seed):
     from game.brain import Brain, JumpController
 
     np.random.seed(seed)
-    log = GameplayLog(generation=generation, brain_index=brain_index, seed=run_sim._seed)
+    log = GameplayLog(generation=generation, brain_index=brain_index, seed=seed)
 
     dino = Dino(ground_y=config.ground_y, collision_inset=config.collision_inset)
     game_speed = GameSpeed(

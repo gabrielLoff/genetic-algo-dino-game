@@ -82,10 +82,10 @@ class ConfigScreen:
         current = getattr(self._config, key)
 
         if isinstance(default, int):
-            step = max(1, int(abs(current) * 0.1))
+            step = max(1, int((max_val - min_val) * 0.05))
             new_val = current + direction * step
         else:
-            step = abs(current) * 0.1 if abs(current) > 0.01 else 0.1
+            step = (max_val - min_val) * 0.01
             new_val = current + direction * step
 
         if min_val is not None:
