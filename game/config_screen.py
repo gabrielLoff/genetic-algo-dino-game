@@ -1,6 +1,8 @@
 import pygame
 from game.config_menu import ConfigMenu
 
+_FITNESS_OPTIONS = ["survival_only", "survival_clearance", "near_miss", "efficiency"]
+
 
 class ConfigScreen:
     def __init__(self, config, screen):
@@ -21,6 +23,9 @@ class ConfigScreen:
             keys = list(group.params.keys())
             for pi, key in enumerate(keys):
                 self._param_map.append((gi, pi, key))
+
+    def _sync_group(self):
+        self._selected_group = self._param_map[self._selected_param][0]
 
     def _current_group(self):
         return self._menu._groups[self._selected_group]
@@ -51,25 +56,37 @@ class ConfigScreen:
             self._running = False
         elif key == pygame.K_DOWN:
             self._selected_param = (self._selected_param + 1) % len(self._param_map)
+            self._sync_group()
         elif key == pygame.K_UP:
             self._selected_param = (self._selected_param - 1) % len(self._param_map)
+            self._sync_group()
         elif key == pygame.K_LEFT:
-            self._adjust_param(-0.1)
+            self._adjust_param(-1)
         elif key == pygame.K_RIGHT:
-            self._adjust_param(0.1)
+            self._adjust_param(1)
 
-    def _adjust_param(self, delta):
+    def _adjust_param(self, direction):
         key = self._current_key()
         group = self._current_group()
         param_info = group.params[key]
         default, min_val, max_val, _label = param_info
 
-        if isinstance(default, str) or default is None:
+        if isinstance(default, str):
+            self._adjust_string_param(key, default, direction)
+            return
+
+        if default is None:
+            self._adjust_nullable_param(key, direction)
             return
 
         current = getattr(self._config, key)
-        step = abs(current) * 0.1 if abs(current) > 0.01 else 0.1
-        new_val = current + delta * step
+
+        if isinstance(default, int):
+            step = max(1, int(abs(current) * 0.1))
+            new_val = current + direction * step
+        else:
+            step = abs(current) * 0.1 if abs(current) > 0.01 else 0.1
+            new_val = current + direction * step
 
         if min_val is not None:
             new_val = max(min_val, new_val)
@@ -78,6 +95,24 @@ class ConfigScreen:
         if isinstance(default, int):
             new_val = int(new_val)
         setattr(self._config, key, new_val)
+
+    def _adjust_string_param(self, key, default, direction):
+        options = _FITNESS_OPTIONS
+        current = getattr(self._config, key)
+        try:
+            idx = options.index(current)
+        except ValueError:
+            idx = 0
+        idx = (idx + direction) % len(options)
+        setattr(self._config, key, options[idx])
+
+    def _adjust_nullable_param(self, key, direction):
+        current = getattr(self._config, key)
+        if current is None:
+            setattr(self._config, key, max(0, direction))
+        else:
+            new_val = current + direction
+            setattr(self._config, key, max(0, new_val))
 
     def _render(self):
         self._screen.fill((30, 30, 40))
@@ -104,7 +139,7 @@ class ConfigScreen:
                     prefix = ">" if selected else " "
                     value = getattr(self._config, key)
                     if value is None:
-                        value_str = "None"
+                        value_str = "Random"
                     elif isinstance(value, str):
                         value_str = value
                     elif isinstance(value, float):
