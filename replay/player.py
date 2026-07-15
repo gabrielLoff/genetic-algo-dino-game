@@ -84,13 +84,13 @@ class ReplayPlayer:
         pygame.display.flip()
 
 
-def record_run_to_log(run_sim, genome, generation, brain_index, config):
+def record_run_to_log(genome, generation, brain_index, config, seed):
     import numpy as np
     from game.dino import Dino
     from game.obstacle import GameSpeed, ObstacleManager
     from game.brain import Brain, JumpController
 
-    np.random.seed(run_sim._seed)
+    np.random.seed(seed)
     log = GameplayLog(generation=generation, brain_index=brain_index, seed=run_sim._seed)
 
     dino = Dino(ground_y=config.ground_y, collision_inset=config.collision_inset)
