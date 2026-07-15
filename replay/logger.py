@@ -78,11 +78,5 @@ class LogStore:
     def get_best(self, generation):
         return self._logs.get(generation)
 
-    def cleanup(self, keep_best=None):
-        if keep_best is None:
-            self._logs.clear()
-        elif keep_best > 0:
-            best_gen = max(self._logs.keys())
-            self._logs = {best_gen: self._logs[best_gen]}
-        else:
-            self._logs.clear()
+    def cleanup(self):
+        self._logs.clear()

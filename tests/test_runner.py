@@ -9,7 +9,6 @@ class TestRunSimulation:
     def test_run_result_stores_data(self):
         result = RunResult(
             brain_index=0,
-            fitness=500.0,
             distance=500.0,
             obstacles_cleared=3,
             jumps_count=2,
@@ -18,7 +17,7 @@ class TestRunSimulation:
             died_by_collision=True,
             died_by_time_cap=False,
         )
-        assert result.fitness == 500.0
+        assert result.distance == 500.0
         assert result.obstacles_cleared == 3
 
     def test_simulation_runs_headless(self):
@@ -73,18 +72,18 @@ class TestGenerationRunner:
         config.fitness_function = "survival_clearance"
         population = create_population(size=10, genome_length=31)
         np.random.seed(42)
-        fitnesses = run_generation(config, population, seed=42, hidden_size=6)
+        fitnesses, results = run_generation(config, population, seed=42, hidden_size=6)
         assert len(fitnesses) == 10
         assert all(f >= 0 for f in fitnesses)
 
-    def test_generation_includes_elapsed_time(self):
-        from game.runner import run_generation_with_results
+    def test_generation_includes_results(self):
+        from game.runner import run_generation
         config = Config()
         config.population_size = 5
         config.time_cap_seconds = 0.05
         population = create_population(size=5, genome_length=31)
         np.random.seed(42)
-        fitnesses, results = run_generation_with_results(
+        fitnesses, results = run_generation(
             config, population, seed=42, hidden_size=6
         )
         assert len(fitnesses) == 5

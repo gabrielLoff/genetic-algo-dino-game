@@ -7,7 +7,7 @@ from ga.engine import (
     gaussian_mutation,
     elitism_survivors,
 )
-from game.runner import run_generation_with_results
+from game.runner import run_generation
 
 
 def derive_seed(master_seed, generation):
@@ -43,7 +43,7 @@ class Evolution:
         return derive_seed(ms, gen)
 
     def _evaluate_and_track(self, seed):
-        fitnesses, results = run_generation_with_results(
+        fitnesses, _results = run_generation(
             self._config,
             self.population,
             seed=seed,

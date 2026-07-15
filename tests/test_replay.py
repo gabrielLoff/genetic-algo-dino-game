@@ -72,21 +72,12 @@ class TestLogStore:
         assert retrieved is not None
         assert retrieved.generation == 1
 
-    def test_cleanup_keeps_best_of_best(self):
+    def test_cleanup_clears_all(self):
         store = LogStore()
         for gen in range(5):
             log = GameplayLog(generation=gen, brain_index=0, seed=gen)
             log.add(FrameRecord(0, 320.0, [], 0.0, 400.0))
             store.save_best(gen, log)
         assert len(store._logs) == 5
-        store.cleanup(keep_best=2)
-        assert len(store._logs) == 1
-
-    def test_cleanup_all(self):
-        store = LogStore()
-        for gen in range(3):
-            log = GameplayLog(generation=gen, brain_index=0, seed=gen)
-            log.add(FrameRecord(0, 320.0, [], 0.0, 400.0))
-            store.save_best(gen, log)
-        store.cleanup(keep_best=None)
+        store.cleanup()
         assert len(store._logs) == 0

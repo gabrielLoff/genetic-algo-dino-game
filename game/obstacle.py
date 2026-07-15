@@ -1,19 +1,20 @@
 import numpy as np
+from game.geometry import inset_hitbox, aabb_collides
 
-CACtus_SIZE_SMALL = "small"
-CACtus_SIZE_TALL = "tall"
+CACTUS_SIZE_SMALL = "small"
+CACTUS_SIZE_TALL = "tall"
 
-_CACtUS_DIMS = {
-    CACtus_SIZE_SMALL: (20, 40),
-    CACtus_SIZE_TALL: (25, 55),
+_CACTUS_DIMS = {
+    CACTUS_SIZE_SMALL: (20, 40),
+    CACTUS_SIZE_TALL: (25, 55),
 }
 
 
 class Cactus:
-    def __init__(self, x, size=CACtus_SIZE_SMALL):
+    def __init__(self, x, size=CACTUS_SIZE_SMALL):
         self.x = float(x)
         self.size = size
-        self.width, self.height = _CACtUS_DIMS[size]
+        self.width, self.height = _CACTUS_DIMS[size]
         self.cleared = False
 
     def update(self, speed, dt):
@@ -23,25 +24,7 @@ class Cactus:
         return self.x + self.width < 0
 
     def hitbox(self):
-        inset_x = self.width * 0.15
-        inset_y = self.height * 0.15
-        return (
-            self.x + inset_x,
-            0,  # y will be set relative to ground in manager
-            self.width - 2 * inset_x,
-            self.height - 2 * inset_y,
-        )
-
-
-def aabb_collides(rect_a, rect_b):
-    ax, ay, aw, ah = rect_a
-    bx, by, bw, bh = rect_b
-    return (
-        ax < bx + bw
-        and ax + aw > bx
-        and ay < by + bh
-        and ay + ah > by
-    )
+        return inset_hitbox(self.x, 0, self.width, self.height, 0.15)
 
 
 class GameSpeed:
@@ -89,7 +72,7 @@ class ObstacleManager:
         self.obstacles = [c for c in self.obstacles if not c.is_off_screen()]
 
     def _spawn(self):
-        size = CACtus_SIZE_TALL if np.random.random() < 0.5 else CACtus_SIZE_SMALL
+        size = CACTUS_SIZE_TALL if np.random.random() < 0.5 else CACTUS_SIZE_SMALL
         cactus = Cactus(x=self._screen_width, size=size)
         self.obstacles.append(cactus)
 

@@ -1,16 +1,22 @@
 import numpy as np
 from game.dino import Dino
-from game.obstacle import GameSpeed, ObstacleManager, aabb_collides
+from game.obstacle import GameSpeed, ObstacleManager
+from game.geometry import aabb_collides
 from game.brain import Brain, JumpController
-from ga.engine import compute_fitness
-from game.config import Config
+
+
+_FITNESS_STRATEGIES = {
+    "survival_only": lambda r: r.distance,
+    "survival_clearance": lambda r: r.distance + r.obstacles_cleared * 100,
+    "near_miss": lambda r: r.distance + r.near_misses * 50,
+    "efficiency": lambda r: r.distance - max(0, r.jumps_count - r.obstacles_cleared * 2) * 10,
+}
 
 
 class RunResult:
-    def __init__(self, brain_index, fitness, distance, obstacles_cleared,
+    def __init__(self, brain_index, distance, obstacles_cleared,
                  jumps_count, near_misses, time_alive, died_by_collision, died_by_time_cap):
         self.brain_index = brain_index
-        self.fitness = fitness
         self.distance = distance
         self.obstacles_cleared = obstacles_cleared
         self.jumps_count = jumps_count
@@ -18,6 +24,12 @@ class RunResult:
         self.time_alive = time_alive
         self.died_by_collision = died_by_collision
         self.died_by_time_cap = died_by_time_cap
+
+    def fitness(self, strategy="survival_clearance"):
+        fn = _FITNESS_STRATEGIES.get(strategy)
+        if fn is None:
+            return self.distance
+        return fn(self)
 
 
 class RunSimulation:
@@ -29,7 +41,7 @@ class RunSimulation:
         np.random.seed(self._seed)
 
         config = self._config
-        dino = Dino(ground_y=config.window_height - 80, collision_inset=config.collision_inset)
+        dino = Dino(ground_y=config.ground_y, collision_inset=config.collision_inset)
         game_speed = GameSpeed(
             initial=config.game_speed_initial,
             max_speed=config.game_speed_max,
@@ -37,7 +49,7 @@ class RunSimulation:
         )
         obs_manager = ObstacleManager(
             screen_width=config.window_width,
-            ground_y=config.window_height - 80,
+            ground_y=config.ground_y,
             gap_mean=config.obstacle_gap_mean,
             min_gap=config.obstacle_min_gap,
             gap_decay=config.obstacle_gap_decay,
@@ -78,7 +90,7 @@ class RunSimulation:
             dino.update(dt, config.dino_gravity)
             jump_ctrl.update()
 
-            if obs_manager.collision_with(dino.hitbox(), config.window_height - 80):
+            if obs_manager.collision_with(dino.hitbox(), config.ground_y):
                 died_by_collision = True
                 break
 
@@ -96,17 +108,8 @@ class RunSimulation:
                 died_by_time_cap = True
                 break
 
-        fitness = compute_fitness(
-            distance=total_distance,
-            obstacles_cleared=obstacles_cleared,
-            near_misses=near_misses,
-            jumps_count=jumps_count,
-            strategy=config.fitness_function,
-        )
-
-        return RunResult(
+        result = RunResult(
             brain_index=brain_index,
-            fitness=fitness,
             distance=total_distance,
             obstacles_cleared=obstacles_cleared,
             jumps_count=jumps_count,
@@ -115,23 +118,16 @@ class RunSimulation:
             died_by_collision=died_by_collision,
             died_by_time_cap=died_by_time_cap,
         )
+        result.fitness_value = result.fitness(config.fitness_function)
+        return result
 
 
 def run_generation(config, population, seed=42, hidden_size=6):
     sim = RunSimulation(config, seed=seed)
     fitnesses = []
-    for i, genome in enumerate(population):
-        result = sim.run_brain(genome, brain_index=i)
-        fitnesses.append(result.fitness)
-    return fitnesses
-
-
-def run_generation_with_results(config, population, seed=42, hidden_size=6):
-    sim = RunSimulation(config, seed=seed)
-    fitnesses = []
     results = []
     for i, genome in enumerate(population):
         result = sim.run_brain(genome, brain_index=i)
-        fitnesses.append(result.fitness)
+        fitnesses.append(result.fitness_value)
         results.append(result)
     return fitnesses, results

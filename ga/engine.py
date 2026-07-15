@@ -32,16 +32,3 @@ def elitism_survivors(fitnesses, elitism_rate):
     n_elite = max(1, int(len(fitnesses) * elitism_rate))
     sorted_indices = sorted(range(len(fitnesses)), key=lambda i: fitnesses[i], reverse=True)
     return sorted_indices[:n_elite]
-
-
-def compute_fitness(distance, obstacles_cleared=0, near_misses=0, jumps_count=0, strategy="survival_clearance"):
-    if strategy == "survival_only":
-        return distance
-    elif strategy == "survival_clearance":
-        return distance + obstacles_cleared * 100
-    elif strategy == "near_miss":
-        return distance + near_misses * 50
-    elif strategy == "efficiency":
-        unnecessary_jumps = max(0, jumps_count - obstacles_cleared * 2)
-        return distance - unnecessary_jumps * 10
-    return distance

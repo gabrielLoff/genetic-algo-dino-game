@@ -5,8 +5,8 @@ from ga.engine import (
     uniform_crossover,
     gaussian_mutation,
     elitism_survivors,
-    compute_fitness,
 )
+from game.runner import RunResult
 
 
 def test_create_population_generates_correct_number():
@@ -75,42 +75,40 @@ def test_elitism_survivors_returns_top_indices():
     assert 1 in survivors
 
 
-def test_compute_fitness_survival_clearance():
-    fitness = compute_fitness(
-        distance=500,
-        obstacles_cleared=3,
-        strategy="survival_clearance",
+def test_fitness_survival_clearance():
+    result = RunResult(
+        brain_index=0, distance=500, obstacles_cleared=3,
+        jumps_count=0, near_misses=0, time_alive=10.0,
+        died_by_collision=True, died_by_time_cap=False,
     )
     expected = 500 + 3 * 100
-    assert fitness == expected
+    assert result.fitness("survival_clearance") == expected
 
 
-def test_compute_fitness_survival_only():
-    fitness = compute_fitness(
-        distance=400,
-        obstacles_cleared=5,
-        strategy="survival_only",
+def test_fitness_survival_only():
+    result = RunResult(
+        brain_index=0, distance=400, obstacles_cleared=5,
+        jumps_count=0, near_misses=0, time_alive=10.0,
+        died_by_collision=True, died_by_time_cap=False,
     )
-    assert fitness == 400
+    assert result.fitness("survival_only") == 400
 
 
-def test_compute_fitness_near_miss():
-    fitness = compute_fitness(
-        distance=300,
-        obstacles_cleared=2,
-        near_misses=4,
-        strategy="near_miss",
+def test_fitness_near_miss():
+    result = RunResult(
+        brain_index=0, distance=300, obstacles_cleared=2,
+        jumps_count=0, near_misses=4, time_alive=10.0,
+        died_by_collision=True, died_by_time_cap=False,
     )
     expected = 300 + 4 * 50
-    assert fitness == expected
+    assert result.fitness("near_miss") == expected
 
 
-def test_compute_fitness_efficiency():
-    fitness = compute_fitness(
-        distance=600,
-        obstacles_cleared=4,
-        jumps_count=10,
-        strategy="efficiency",
+def test_fitness_efficiency():
+    result = RunResult(
+        brain_index=0, distance=600, obstacles_cleared=4,
+        jumps_count=10, near_misses=0, time_alive=10.0,
+        died_by_collision=True, died_by_time_cap=False,
     )
     expected = 600 - max(0, 10 - 4 * 2) * 10
-    assert fitness == expected
+    assert result.fitness("efficiency") == expected

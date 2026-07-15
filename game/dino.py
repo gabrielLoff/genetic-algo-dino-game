@@ -1,3 +1,5 @@
+from game.geometry import inset_hitbox
+
 DINO_STATE_GROUNDED = "grounded"
 DINO_STATE_JUMPING = "jumping"
 DINO_STATE_FALLING = "falling"
@@ -30,11 +32,4 @@ class Dino:
             self.state = DINO_STATE_JUMPING
 
     def hitbox(self):
-        inset_x = 0
-        inset_y = 0
-        return (
-            self.x + inset_x,
-            self.y + inset_y,
-            40 * (1 - self._collision_inset),
-            50 * (1 - self._collision_inset),
-        )
+        return inset_hitbox(self.x, self.y, 40, 50, self._collision_inset)

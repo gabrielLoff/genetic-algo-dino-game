@@ -1,30 +1,31 @@
 import numpy as np
-from game.obstacle import Cactus, CACtus_SIZE_SMALL, CACtus_SIZE_TALL
-from game.obstacle import GameSpeed, ObstacleManager, aabb_collides
+from game.obstacle import Cactus, CACTUS_SIZE_SMALL, CACTUS_SIZE_TALL
+from game.obstacle import GameSpeed, ObstacleManager
+from game.geometry import aabb_collides
 
 
 class TestCactus:
     def test_cactus_initial_position_and_size(self):
-        c = Cactus(x=500, size=CACtus_SIZE_TALL)
+        c = Cactus(x=500, size=CACTUS_SIZE_TALL)
         assert c.x == 500
-        assert c.size == CACtus_SIZE_TALL
+        assert c.size == CACTUS_SIZE_TALL
 
     def test_cactus_scrolls_left(self):
-        c = Cactus(x=500, size=CACtus_SIZE_SMALL)
+        c = Cactus(x=500, size=CACTUS_SIZE_SMALL)
         c.update(speed=400, dt=1.0)
         assert c.x == 100
 
     def test_cactus_hitbox(self):
-        c = Cactus(x=200, size=CACtus_SIZE_SMALL)
+        c = Cactus(x=200, size=CACTUS_SIZE_SMALL)
         hb = c.hitbox()
         assert isinstance(hb, tuple)
         assert len(hb) == 4
 
     def test_cactus_is_off_screen(self):
-        c = Cactus(x=-30, size=CACtus_SIZE_SMALL)
+        c = Cactus(x=-30, size=CACTUS_SIZE_SMALL)
         assert c.is_off_screen()
 
-        c2 = Cactus(x=50, size=CACtus_SIZE_TALL)
+        c2 = Cactus(x=50, size=CACTUS_SIZE_TALL)
         assert not c2.is_off_screen()
 
 
@@ -76,7 +77,7 @@ class TestObstacleManager:
     def test_distance_to_next_obstacle(self):
         np.random.seed(0)
         om = ObstacleManager(screen_width=800, ground_y=320)
-        om.obstacles = [Cactus(x=300, size=CACtus_SIZE_SMALL)]
+        om.obstacles = [Cactus(x=300, size=CACTUS_SIZE_SMALL)]
         dist = om.distance_to_next(80, 800)
         assert dist == 220
 
@@ -88,7 +89,7 @@ class TestObstacleManager:
 
     def test_obstacle_present_flag(self):
         om = ObstacleManager(screen_width=800, ground_y=320)
-        om.obstacles = [Cactus(x=300, size=CACtus_SIZE_SMALL)]
+        om.obstacles = [Cactus(x=300, size=CACTUS_SIZE_SMALL)]
         assert om.obstacle_present(80) is True
 
         om.obstacles = []
@@ -105,8 +106,8 @@ class TestObstacleManager:
         np.random.seed(0)
         om = ObstacleManager(screen_width=800, ground_y=320)
         om.obstacles = [
-            Cactus(x=-50, size=CACtus_SIZE_SMALL),
-            Cactus(x=300, size=CACtus_SIZE_TALL),
+            Cactus(x=-50, size=CACTUS_SIZE_SMALL),
+            Cactus(x=300, size=CACTUS_SIZE_TALL),
         ]
         om.update(speed=400, dt=0.01)
         assert len(om.obstacles) == 1
