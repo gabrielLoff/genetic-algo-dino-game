@@ -1,5 +1,6 @@
 import json
 import os
+from dataclasses import dataclass
 
 PARAM_SPECS = [
     ("population_size", 100, 10, 1000, "Genetic Algorithm", "Population Size", int,
@@ -57,10 +58,32 @@ DEFAULT_CONFIG = {
 }
 
 
+@dataclass
 class Config:
-    def __init__(self, **kwargs):
-        for key, default in DEFAULT_CONFIG.items():
-            setattr(self, key, kwargs.get(key, default))
+    population_size: int = 100
+    hidden_layer_size: int = 6
+    mutation_rate: float = 0.1
+    mutation_strength: float = 0.2
+    tournament_size_percent: float = 0.1
+    elitism_rate: float = 0.05
+    fitness_function: str = "survival_clearance"
+    game_speed_initial: float = 400
+    game_speed_max: float = 1000
+    game_speed_increment: float = 2
+    obstacle_min_gap: float = 200
+    obstacle_gap_mean: float = 500
+    obstacle_gap_decay: float = 0.001
+    time_cap_seconds: float = 30
+    jump_cooldown_frames: int = 5
+    collision_inset: float = 0.15
+    dino_gravity: float = 2000
+    dino_max_jump_velocity: float = -600
+    ground_height: int = 80
+    window_width: int = 800
+    window_height: int = 400
+    max_generations: int = 50
+    plateau_generations: int = 10
+    master_seed: int | None = None
 
     @property
     def ground_y(self):
