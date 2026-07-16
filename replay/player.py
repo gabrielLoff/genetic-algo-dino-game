@@ -10,7 +10,7 @@ class ReplayPlayer:
         self._font = font or pygame.font.SysFont("monospace", 14)
         self._speed = 1
 
-    def play(self, log, speed=1):
+    def play(self, log, speed=1, ghost_logs=None, ghost_labels=None):
         self._speed = speed
         clock = pygame.time.Clock()
         frame_idx = 0
@@ -32,11 +32,11 @@ class ReplayPlayer:
                         self._speed = 4
 
             record = frames[frame_idx]
-            self._render_frame(record, log)
+            self._render_frame(record, log, ghost_logs, ghost_labels, frame_idx)
             frame_idx += self._speed
             clock.tick(60)
 
-    def _render_frame(self, record, log):
+    def _render_frame(self, record, log, ghost_logs=None, ghost_labels=None, frame_idx=0):
         screen_w = self._screen.get_width()
         screen_h = self._screen.get_height()
         render_background(self._screen, screen_w, screen_h)
@@ -46,10 +46,20 @@ class ReplayPlayer:
         ground_offset = int(record.frame * record.game_speed / 60) % 800
         render_ground(self._screen, ground_y, ground_h, ground_offset)
 
-        render_dino(self._screen, 80, record.dino_y)
-
         for obs in record.obstacles:
             render_cactus(self._screen, obs["x"], ground_y, obs.get("size", "small"))
+
+        if ghost_logs and ghost_labels:
+            for gi, ghost_log in enumerate(ghost_logs):
+                if frame_idx < ghost_log.frame_count:
+                    ghost_frame = ghost_log.frames[frame_idx]
+                    ghost_rect = pygame.Surface((40, 50), pygame.SRCALPHA)
+                    ghost_rect.fill((200, 200, 200, 128))
+                    self._screen.blit(ghost_rect, (80, ghost_frame.dino_y - 50))
+                    label = self._font.render(ghost_labels[gi], True, (180, 180, 180))
+                    self._screen.blit(label, (80, ghost_frame.dino_y - 60))
+
+        render_dino(self._screen, 80, record.dino_y)
 
         gauge_x = 700
         gauge_y = 20

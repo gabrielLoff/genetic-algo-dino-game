@@ -46,6 +46,7 @@ class ConfigMenu:
         setattr(self._config, key, new_val)
 
 _FITNESS_OPTIONS = ["survival_only", "survival_clearance", "near_miss", "efficiency"]
+_GHOST_OPTIONS = ["off", "worst", "random", "top"]
 
 
 class ConfigScreen:
@@ -183,7 +184,10 @@ class ConfigScreen:
         setattr(self._config, key, new_val)
 
     def _adjust_string_param(self, key, default, direction):
-        options = _FITNESS_OPTIONS
+        if key == "ghost_mode":
+            options = _GHOST_OPTIONS
+        else:
+            options = _FITNESS_OPTIONS
         current = getattr(self._config, key)
         try:
             idx = options.index(current)

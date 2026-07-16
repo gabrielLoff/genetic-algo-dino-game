@@ -51,6 +51,12 @@ PARAM_SPECS = [
      "Game window width in pixels"),
     ("window_height", 400, 200, 1440, "Game", "Window Height", int,
      "Game window height in pixels"),
+    ("obstacle_seed", None, None, None, "Game", "Obstacle Seed", None,
+     "Fixed seed for obstacle layout; Random if None"),
+    ("ghost_mode", "off", None, None, "Game", "Ghost Mode", str,
+     "Show ghost brains in replay: off, worst, random, top"),
+    ("ghost_count", 3, 1, 10, "Game", "Ghost Count", int,
+     "Number of ghost brains when mode is top"),
 ]
 
 DEFAULT_CONFIG = {
@@ -84,6 +90,9 @@ class Config:
     max_generations: int = 50
     plateau_generations: int = 10
     master_seed: int | None = None
+    obstacle_seed: int | None = None
+    ghost_mode: str = "off"
+    ghost_count: int = 3
 
     @property
     def ground_y(self):

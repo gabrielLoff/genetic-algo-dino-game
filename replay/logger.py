@@ -71,6 +71,8 @@ class GameplayLog:
 class LogStore:
     def __init__(self):
         self._logs = {}
+        self._ghost_logs = {}
+        self._ghost_labels = {}
 
     def save_best(self, generation, log):
         self._logs[generation] = log
@@ -78,5 +80,17 @@ class LogStore:
     def get_best(self, generation):
         return self._logs.get(generation)
 
+    def save_ghosts(self, generation, ghost_logs, labels):
+        self._ghost_logs[generation] = ghost_logs
+        self._ghost_labels[generation] = labels
+
+    def get_ghosts_and_labels(self, generation):
+        return (
+            self._ghost_logs.get(generation, []),
+            self._ghost_labels.get(generation, []),
+        )
+
     def cleanup(self):
         self._logs.clear()
+        self._ghost_logs.clear()
+        self._ghost_labels.clear()

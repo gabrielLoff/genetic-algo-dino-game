@@ -23,7 +23,8 @@ class GameSimulation:
         self._seed = seed
 
     def run(self, per_frame_callback):
-        np.random.seed(self._seed)
+        seed = self._config.obstacle_seed if self._config.obstacle_seed is not None else self._seed
+        np.random.seed(seed)
         config = self._config
 
         dino = Dino(ground_y=config.ground_y, collision_inset=config.collision_inset)
