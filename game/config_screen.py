@@ -63,7 +63,7 @@ class ConfigScreen:
         self._build_param_map()
         self._presets = load_presets()
         self._preset_index = 0
-        self._focus_preset = True
+        self._focus_preset = False
         self._confirming_preset = False
         self._scroll_offset = 0
         self._input_mode = False
@@ -216,7 +216,6 @@ class ConfigScreen:
             elif key == pygame.K_RIGHT:
                 self._adjust_param(1)
             elif key == pygame.K_TAB:
-                self._focus_preset = True
                 return
 
     def _adjust_param(self, direction):
@@ -235,12 +234,15 @@ class ConfigScreen:
 
         current = getattr(self._config, key)
 
-        if isinstance(default, int):
-            step = max(1, int((max_val - min_val) * 0.05))
-            new_val = current + direction * step
+        if min_val is not None and max_val is not None:
+            if isinstance(default, int):
+                step = max(1, int((max_val - min_val) * 0.05))
+            else:
+                step = (max_val - min_val) * 0.01
         else:
-            step = (max_val - min_val) * 0.01
-            new_val = current + direction * step
+            step = abs(current) * 0.1 if abs(current) > 0.01 else 1
+
+        new_val = current + direction * step
 
         if min_val is not None:
             new_val = max(min_val, new_val)

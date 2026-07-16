@@ -57,7 +57,7 @@ PARAM_SPECS = [
      "Show ghost brains in replay: off, worst, random, top"),
     ("ghost_count", 3, 1, 10, "Game", "Ghost Count", int,
      "Number of ghost brains when mode is top"),
-    ("fullscreen", False, None, None, "Game", "Fullscreen", None,
+    ("fullscreen", False, False, True, "Game", "Fullscreen", None,
      "Run in borderless fullscreen for presentations"),
 ]
 
