@@ -3,8 +3,7 @@ import time
 from game.config import load_config, Config
 from game.config_screen import ConfigScreen
 from ga.evolution import Evolution, derive_seed
-from dashboard.charts import compute_genome_stats
-from dashboard.window import DashboardWindow
+from dashboard.window import DashboardWindow, compute_genome_stats
 from replay.logger import LogStore
 from replay.player import record_run_to_log, ReplayPlayer
 

@@ -1,4 +1,4 @@
-from game.config_menu import ConfigMenu, ParamGroup
+from game.config_screen import ConfigMenu, ParamGroup
 from game.config import Config
 
 
