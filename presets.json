@@ -1,0 +1,71 @@
+{
+  "presets": [
+    {
+      "name": "Default",
+      "description": "Baseline configuration — reloads from config.json or hardcoded defaults",
+      "params": {}
+    },
+    {
+      "name": "Speedy Evolution",
+      "description": "Large population, high mutation, big tournament — converges fast",
+      "params": {
+        "population_size": 200,
+        "mutation_rate": 0.3,
+        "tournament_size_percent": 0.3,
+        "max_generations": 20,
+        "master_seed": 42
+      }
+    },
+    {
+      "name": "Precise Timing",
+      "description": "Near-miss fitness rewards brains that jump at the last possible moment",
+      "params": {
+        "fitness_function": "near_miss",
+        "time_cap_seconds": 60,
+        "obstacle_gap_mean": 600,
+        "master_seed": 7
+      }
+    },
+    {
+      "name": "Jump Efficiency",
+      "description": "Brains are penalized for unnecessary jumps — only jump when needed",
+      "params": {
+        "fitness_function": "efficiency",
+        "time_cap_seconds": 60,
+        "jump_cooldown_frames": 3,
+        "master_seed": 13
+      }
+    },
+    {
+      "name": "Pure Survival",
+      "description": "Simplest fitness — only raw distance matters, no bonuses or penalties",
+      "params": {
+        "fitness_function": "survival_only",
+        "time_cap_seconds": 30,
+        "master_seed": 99
+      }
+    },
+    {
+      "name": "Chaos Mode",
+      "description": "High mutation, no elitism, tiny tournament — wild diversity every generation",
+      "params": {
+        "mutation_rate": 0.8,
+        "mutation_strength": 1.5,
+        "elitism_rate": 0.0,
+        "tournament_size_percent": 0.05,
+        "master_seed": 77
+      }
+    },
+    {
+      "name": "Elite Guard",
+      "description": "High elitism keeps top brains — observe stagnation and premature convergence",
+      "params": {
+        "elitism_rate": 0.4,
+        "population_size": 50,
+        "mutation_rate": 0.01,
+        "plateau_generations": 5,
+        "master_seed": 100
+      }
+    }
+  ]
+}
