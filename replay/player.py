@@ -1,6 +1,7 @@
 import json
 import pygame
 from replay.logger import GameplayLog, FrameRecord
+from game.sprites import render_dino, render_cactus, render_ground, render_background
 
 
 class ReplayPlayer:
@@ -36,29 +37,19 @@ class ReplayPlayer:
             clock.tick(60)
 
     def _render_frame(self, record, log):
-        self._screen.fill((255, 255, 255))
+        screen_w = self._screen.get_width()
+        screen_h = self._screen.get_height()
+        render_background(self._screen, screen_w, screen_h)
 
         ground_y = 320
-        ground_height = 80
-        pygame.draw.rect(self._screen, (83, 83, 83),
-                         (0, ground_y, 800, ground_height))
+        ground_h = 80
+        ground_offset = int(record.frame * record.game_speed / 60) % 800
+        render_ground(self._screen, ground_y, ground_h, ground_offset)
 
-        ground_offset = (record.frame * record.game_speed / 60) % 800
-        for i in range(-1, 3):
-            tile_x = i * 800 - ground_offset
-            pygame.draw.rect(self._screen, (120, 120, 120),
-                             (tile_x, ground_y, 800, 2))
-
-        dino_rect = pygame.Rect(80, record.dino_y - 50, 40, 50)
-        pygame.draw.rect(self._screen, (50, 50, 50), dino_rect)
+        render_dino(self._screen, 80, record.dino_y)
 
         for obs in record.obstacles:
-            obs_x = obs["x"]
-            size = obs.get("size", "small")
-            width = 20 if size == "small" else 25
-            height = 40 if size == "small" else 55
-            obs_rect = pygame.Rect(obs_x, ground_y - height, width, height)
-            pygame.draw.rect(self._screen, (0, 128, 0), obs_rect)
+            render_cactus(self._screen, obs["x"], ground_y, obs.get("size", "small"))
 
         gauge_x = 700
         gauge_y = 20
