@@ -71,20 +71,6 @@ class ConfigScreen:
             self._focus_preset = not self._focus_preset
         elif self._focus_preset:
             if key == pygame.K_RETURN:
-                self._started = True
-                self._running = False
-            elif key == pygame.K_ESCAPE:
-                self._running = False
-            elif key == pygame.K_LEFT:
-                self._preset_index = (self._preset_index - 1) % len(self._presets)
-            elif key == pygame.K_RIGHT:
-                self._preset_index = (self._preset_index + 1) % len(self._presets)
-            elif key == pygame.K_DOWN:
-                self._focus_preset = False
-            elif key == pygame.K_RETURN and not self._focus_preset:
-                pass
-        else:
-            if key == pygame.K_RETURN:
                 preset = self._presets[self._preset_index]
                 if preset["name"] != "Default" or len(preset.get("params", {})) > 0:
                     self._confirming_preset = True
@@ -94,8 +80,18 @@ class ConfigScreen:
                     self._build_param_map()
                     self._selected_group = 0
                     self._selected_param = 0
-                    self._focus_preset = True
-                return
+            elif key == pygame.K_ESCAPE:
+                self._running = False
+            elif key == pygame.K_LEFT:
+                self._preset_index = (self._preset_index - 1) % len(self._presets)
+            elif key == pygame.K_RIGHT:
+                self._preset_index = (self._preset_index + 1) % len(self._presets)
+            elif key == pygame.K_DOWN:
+                self._focus_preset = False
+        else:
+            if key == pygame.K_RETURN:
+                self._started = True
+                self._running = False
             elif key == pygame.K_ESCAPE:
                 self._running = False
             elif key == pygame.K_DOWN:
