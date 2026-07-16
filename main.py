@@ -85,7 +85,7 @@ def main():
                 break
             elif cmd == "q":
                 remaining = 0
-                evolution._plateau_count = config.plateau_generations + 1
+                evolution.stop(Evolution.END_QUIT)
                 break
             elif cmd == "r":
                 _replay_best(config, log_store)
@@ -97,7 +97,18 @@ def main():
                 print("Unknown command. Enter=next, N=run N, R=replay, Q=quit")
 
     elapsed = time.perf_counter() - start
-    print(f"\nEvolution finished in {elapsed:.1f}s after {evolution.generation} generations")
+    reason = evolution.end_condition
+
+    if reason == Evolution.END_PLATEAU:
+        print(f"\nEvolution finished in {elapsed:.1f}s after {evolution.generation} generations "
+              f"(plateau — best fitness {evolution.best_fitness:.1f} unchanged since gen {evolution.plateau_started_gen})")
+    elif reason == Evolution.END_MAX_GENS:
+        print(f"\nEvolution finished in {elapsed:.1f}s after {evolution.generation} generations "
+              f"(reached max_generations)")
+    elif reason == Evolution.END_QUIT:
+        print(f"\nEvolution stopped by user after {evolution.generation} generations")
+    else:
+        print(f"\nEvolution finished in {elapsed:.1f}s after {evolution.generation} generations")
     print(f"Best fitness: {evolution.best_fitness:.1f}")
 
     if evolution.best_genome is not None:

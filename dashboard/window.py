@@ -2,6 +2,14 @@ import matplotlib
 matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
 from dashboard.charts import extract_fitness_history, compute_genome_stats
+from ga.evolution import Evolution
+
+
+_END_LABELS = {
+    Evolution.END_MAX_GENS: "Reached max generations",
+    Evolution.END_PLATEAU: "Fitness plateaued",
+    Evolution.END_QUIT: "Stopped by user",
+}
 
 
 class DashboardWindow:
@@ -12,6 +20,7 @@ class DashboardWindow:
         )
         self._fig.canvas.manager.set_window_title("GA Evolution Dashboard")
         self._ax_text.axis("off")
+        self._plateau_line = None
 
     def update(self, evolution):
         generations, bests, avgs = extract_fitness_history(evolution.history)
@@ -25,6 +34,10 @@ class DashboardWindow:
         self._ax_chart.legend(loc="upper left")
         self._ax_chart.grid(True, alpha=0.3)
 
+        if evolution.end_condition == Evolution.END_PLATEAU:
+            self._ax_chart.axvline(x=evolution.plateau_started_gen, color="red",
+                                   linestyle="--", alpha=0.5, label="Plateau start")
+
         self._ax_text.clear()
         self._ax_text.axis("off")
         lines = [
@@ -32,6 +45,9 @@ class DashboardWindow:
             f"Population: {evolution._config.population_size}",
             f"Best fitness: {evolution.best_fitness:.1f}",
         ]
+        if evolution.end_condition != Evolution.END_RUNNING:
+            label = _END_LABELS.get(evolution.end_condition, "Finished")
+            lines += ["", f"Status: {label}"]
         if evolution.best_genome is not None:
             stats = compute_genome_stats(evolution.best_genome)
             lines += [

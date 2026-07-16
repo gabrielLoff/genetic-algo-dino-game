@@ -16,6 +16,11 @@ def derive_seed(master_seed, generation):
 
 
 class Evolution:
+    END_RUNNING = "running"
+    END_MAX_GENS = "max_generations"
+    END_PLATEAU = "plateau"
+    END_QUIT = "quit"
+
     def __init__(self, config):
         self._config = config
         self.generation = 0
@@ -23,6 +28,8 @@ class Evolution:
         self._best_fitness = 0.0
         self._best_genome = None
         self._plateau_count = 0
+        self._plateau_started_gen = 0
+        self._end_condition = self.END_RUNNING
 
         np.random.seed(self._config.master_seed or np.random.randint(0, 2**31))
         self.population = create_population(
@@ -52,6 +59,7 @@ class Evolution:
             self._best_fitness = gen_best
             self._best_genome = self.population[best_idx].copy()
             self._plateau_count = 0
+            self._plateau_started_gen = self.generation + 1
         else:
             self._plateau_count += 1
 
@@ -88,12 +96,25 @@ class Evolution:
         self.generation += 1
         self._fitnesses = self._evaluate_and_track(seed=self._seed_for(self.generation))
 
-    def is_finished(self):
         if self.generation >= self._config.max_generations:
-            return True
-        if self.generation > 0 and self._plateau_count >= self._config.plateau_generations:
-            return True
-        return False
+            self._end_condition = self.END_MAX_GENS
+        elif self.generation > 0 and self._plateau_count >= self._config.plateau_generations:
+            self._end_condition = self.END_PLATEAU
+
+    def is_finished(self):
+        return self._end_condition != self.END_RUNNING
+
+    def stop(self, reason):
+        if reason in (self.END_QUIT, self.END_PLATEAU, self.END_MAX_GENS):
+            self._end_condition = reason
+
+    @property
+    def end_condition(self):
+        return self._end_condition
+
+    @property
+    def plateau_started_gen(self):
+        return self._plateau_started_gen
 
     @property
     def best_fitness(self):

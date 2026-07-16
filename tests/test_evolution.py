@@ -93,7 +93,46 @@ class TestEvolution:
         config.plateau_generations = 3
         np.random.seed(42)
         evolution = Evolution(config)
-        stagnation = 0
         while not evolution.is_finished() and evolution.generation < 50:
             evolution.step()
         assert evolution.generation < 50
+
+    def test_end_condition_reports_max_generations(self):
+        from ga.evolution import Evolution as Evo
+        config = self._make_config()
+        config.max_generations = 3
+        np.random.seed(42)
+        evolution = Evolution(config)
+        while not evolution.is_finished():
+            evolution.step()
+        assert evolution.end_condition == Evo.END_MAX_GENS
+
+    def test_end_condition_reports_plateau(self):
+        from ga.evolution import Evolution as Evo
+        config = self._make_config()
+        config.max_generations = 100
+        config.plateau_generations = 3
+        np.random.seed(42)
+        evolution = Evolution(config)
+        while not evolution.is_finished() and evolution.generation < 50:
+            evolution.step()
+        assert evolution.end_condition in (Evo.END_PLATEAU, Evo.END_MAX_GENS)
+
+    def test_stop_sets_end_condition(self):
+        from ga.evolution import Evolution as Evo
+        config = self._make_config()
+        np.random.seed(42)
+        evolution = Evolution(config)
+        assert evolution.end_condition == Evo.END_RUNNING
+        evolution.stop(Evo.END_QUIT)
+        assert evolution.end_condition == Evo.END_QUIT
+        assert evolution.is_finished()
+
+    def test_plateau_started_gen_tracked(self):
+        config = self._make_config()
+        config.max_generations = 5
+        np.random.seed(42)
+        evolution = Evolution(config)
+        while not evolution.is_finished():
+            evolution.step()
+        assert evolution.plateau_started_gen >= 0
