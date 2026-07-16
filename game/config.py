@@ -57,6 +57,8 @@ PARAM_SPECS = [
      "Show ghost brains in replay: off, worst, random, top"),
     ("ghost_count", 3, 1, 10, "Game", "Ghost Count", int,
      "Number of ghost brains when mode is top"),
+    ("fullscreen", False, None, None, "Game", "Fullscreen", None,
+     "Run in borderless fullscreen for presentations"),
 ]
 
 DEFAULT_CONFIG = {
@@ -93,6 +95,7 @@ class Config:
     obstacle_seed: int | None = None
     ghost_mode: str = "off"
     ghost_count: int = 3
+    fullscreen: bool = False
 
     @property
     def ground_y(self):

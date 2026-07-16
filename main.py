@@ -8,6 +8,14 @@ from replay.logger import LogStore
 from replay.player import record_run_to_log, ReplayPlayer
 
 
+def _create_display(config):
+    flags = pygame.NOFRAME if config.fullscreen else 0
+    if config.fullscreen:
+        info = pygame.display.Info()
+        return pygame.display.set_mode((info.current_w, info.current_h), flags)
+    return pygame.display.set_mode((config.window_width, config.window_height), flags)
+
+
 def _record_best(evolution, config, log_store):
     gen = evolution.generation - 1
     ms = config.master_seed
@@ -72,7 +80,7 @@ def _replay_best(config, log_store):
     ghosts, ghost_labels = log_store.get_ghosts_and_labels(gen)
     print(f"Replaying best brain ({best_log.frame_count} frames)... Press SPACE to stop.")
     pygame.init()
-    screen = pygame.display.set_mode((config.window_width, config.window_height))
+    screen = _create_display(config)
     pygame.display.set_caption("GA Dino Game — Best Brain Replay")
     ReplayPlayer(screen).play(best_log, ghost_logs=ghosts, ghost_labels=ghost_labels)
     pygame.quit()
@@ -81,7 +89,7 @@ def _replay_best(config, log_store):
 def main():
     config = load_config("config.json")
     pygame.init()
-    screen = pygame.display.set_mode((config.window_width, config.window_height))
+    screen = _create_display(config)
 
     config_screen = ConfigScreen(config, screen)
     started = config_screen.run()

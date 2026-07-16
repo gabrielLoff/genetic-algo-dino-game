@@ -65,6 +65,9 @@ class ConfigScreen:
         self._preset_index = 0
         self._focus_preset = True
         self._confirming_preset = False
+        self._scroll_offset = 0
+        self._input_mode = False
+        self._input_buffer = ""
 
     def _build_param_map(self):
         self._param_map = []
@@ -75,6 +78,59 @@ class ConfigScreen:
 
     def _sync_group(self):
         self._selected_group = self._param_map[self._selected_param][0]
+        self._scroll_to_visible()
+
+    def _handle_input_key(self, key):
+        if key == pygame.K_RETURN:
+            self._input_mode = False
+            key_name = self._current_key()
+            group = self._current_group()
+            default, min_val, max_val, _label, _desc = group.params[key_name]
+            try:
+                new_val = float(self._input_buffer) if self._input_buffer else 0
+            except ValueError:
+                new_val = float(default or 0)
+            if min_val is not None:
+                new_val = max(min_val, new_val)
+            if max_val is not None:
+                new_val = min(max_val, new_val)
+            if isinstance(default, int):
+                new_val = int(new_val)
+            setattr(self._config, key_name, new_val)
+        elif key == pygame.K_ESCAPE:
+            self._input_mode = False
+        elif key == pygame.K_BACKSPACE:
+            self._input_buffer = self._input_buffer[:-1]
+        elif pygame.K_0 <= key <= pygame.K_9:
+            self._input_buffer += chr(key)
+        elif key == pygame.K_MINUS and self._input_buffer == "":
+            self._input_buffer = "-"
+        elif key == pygame.K_PERIOD and "." not in self._input_buffer:
+            key_name = self._current_key()
+            group = self._current_group()
+            default, _min, _max, _label, _desc = group.params[key_name]
+            if isinstance(default, float):
+                self._input_buffer += "."
+
+    def _scroll_to_visible(self):
+        view_top = 75
+        view_bottom = self._screen.get_height() - 55
+        row_h = 20
+
+        y = view_top
+        for gi, group in enumerate(self._menu._groups):
+            if gi > 0:
+                pass
+            for pi in range(len(group.params)):
+                if gi == self._selected_group and pi == self._param_map[self._selected_param][1]:
+                    screen_y = y - self._scroll_offset
+                    if screen_y < view_top:
+                        self._scroll_offset -= (view_top - screen_y)
+                    elif screen_y + row_h > view_bottom:
+                        self._scroll_offset += (screen_y + row_h - view_bottom)
+                    return
+                y += row_h
+            y += 24
 
     def _current_group(self):
         return self._menu._groups[self._selected_group]
@@ -111,6 +167,10 @@ class ConfigScreen:
                 self._confirming_preset = False
             return
 
+        if self._input_mode:
+            self._handle_input_key(key)
+            return
+
         if key == pygame.K_TAB:
             self._focus_preset = not self._focus_preset
         elif self._focus_preset:
@@ -134,6 +194,13 @@ class ConfigScreen:
                 self._focus_preset = False
         else:
             if key == pygame.K_RETURN:
+                key_name = self._current_key()
+                group = self._current_group()
+                default, _min, _max, _label, _desc = group.params[key_name]
+                if not isinstance(default, str) and default is not None:
+                    self._input_mode = True
+                    self._input_buffer = str(getattr(self._config, key_name))
+                    return
                 self._started = True
                 self._running = False
             elif key == pygame.K_ESCAPE:
@@ -215,7 +282,8 @@ class ConfigScreen:
         self._screen.blit(preset_label, (20, 40))
 
         brackets = "<" if self._focus_preset else " "
-        preset_name = f"{brackets} {preset['name']:30s}"
+        close_b = ">" if self._focus_preset else " "
+        preset_name = f"{brackets} {preset['name']:30s} {close_b}"
         name_color = (255, 255, 150) if self._focus_preset else (180, 180, 200)
         name_text = self._font.render(preset_name, True, name_color)
         self._screen.blit(name_text, (110, 40))
@@ -253,7 +321,7 @@ class ConfigScreen:
         for group_name in group_names:
             color = (255, 255, 100) if group_name == current_group_name else (150, 150, 150)
             label = self._font.render(group_name.upper(), True, color)
-            self._screen.blit(label, (20, y))
+            self._screen.blit(label, (20, y - self._scroll_offset))
             y += 24
 
             if group_name == current_group_name:
@@ -268,7 +336,9 @@ class ConfigScreen:
 
                     prefix = ">" if selected else " "
                     value = getattr(self._config, key)
-                    if value is None:
+                    if selected and self._input_mode:
+                        value_str = self._input_buffer + "_"
+                    elif value is None:
                         value_str = "Random"
                     elif isinstance(value, str):
                         value_str = value
@@ -279,7 +349,7 @@ class ConfigScreen:
 
                     color = (255, 255, 255) if selected else (180, 180, 200)
                     text = self._font.render(f"{prefix} {label:25s} {value_str:>12s}", True, color)
-                    self._screen.blit(text, (30, y))
+                    self._screen.blit(text, (30, y - self._scroll_offset))
                     y += 20
 
         if selected_desc and not self._focus_preset:
