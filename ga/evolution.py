@@ -7,7 +7,6 @@ from ga.engine import (
     gaussian_mutation,
     elitism_survivors,
 )
-from game.runner import run_generation
 
 
 def derive_seed(master_seed, generation):
@@ -21,8 +20,12 @@ class Evolution:
     END_PLATEAU = "plateau"
     END_QUIT = "quit"
 
-    def __init__(self, config):
+    def __init__(self, config, evaluator=None):
+        if evaluator is None:
+            from game.runner import run_generation
+            evaluator = run_generation
         self._config = config
+        self._evaluator = evaluator
         self.generation = 0
         self.history = []
         self._best_fitness = 0.0
@@ -45,7 +48,7 @@ class Evolution:
         return derive_seed(ms, gen)
 
     def _evaluate_and_track(self, seed):
-        fitnesses, _results = run_generation(
+        fitnesses, _results = self._evaluator(
             self._config,
             self.population,
             seed=seed,

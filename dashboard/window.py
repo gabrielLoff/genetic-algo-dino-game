@@ -1,8 +1,17 @@
+import numpy as np
 import matplotlib
 matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
-from dashboard.charts import extract_fitness_history, compute_genome_stats
 from ga.evolution import Evolution
+
+
+def compute_genome_stats(genome):
+    return {
+        "min": float(np.min(genome)),
+        "max": float(np.max(genome)),
+        "mean": float(np.mean(genome)),
+        "std": float(np.std(genome)),
+    }
 
 
 _END_LABELS = {
@@ -23,7 +32,9 @@ class DashboardWindow:
         self._plateau_line = None
 
     def update(self, evolution):
-        generations, bests, avgs = extract_fitness_history(evolution.history)
+        generations = [r["generation"] for r in evolution.history]
+        bests = [r["best_fitness"] for r in evolution.history]
+        avgs = [r["avg_fitness"] for r in evolution.history]
 
         self._ax_chart.clear()
         self._ax_chart.plot(generations, bests, "b-", label="Best")

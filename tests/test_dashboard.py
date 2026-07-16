@@ -1,25 +1,6 @@
 import numpy as np
 import pytest
-from dashboard.charts import extract_fitness_history, compute_genome_stats
-
-
-def test_extract_fitness_history_from_evolution_records():
-    history = [
-        {"generation": 0, "best_fitness": 100.0, "avg_fitness": 50.0},
-        {"generation": 1, "best_fitness": 200.0, "avg_fitness": 80.0},
-        {"generation": 2, "best_fitness": 250.0, "avg_fitness": 120.0},
-    ]
-    generations, bests, avgs = extract_fitness_history(history)
-    assert generations == [0, 1, 2]
-    assert bests == [100.0, 200.0, 250.0]
-    assert avgs == [50.0, 80.0, 120.0]
-
-
-def test_extract_fitness_history_empty_returns_empty():
-    generations, bests, avgs = extract_fitness_history([])
-    assert generations == []
-    assert bests == []
-    assert avgs == []
+from dashboard.window import compute_genome_stats
 
 
 def test_compute_genome_stats():

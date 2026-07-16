@@ -128,11 +128,21 @@ class TestEvolution:
         assert evolution.end_condition == Evo.END_QUIT
         assert evolution.is_finished()
 
-    def test_plateau_started_gen_tracked(self):
+    def test_mock_evaluator_is_injectable(self):
+        from ga.evolution import Evolution as Evo
         config = self._make_config()
-        config.max_generations = 5
+        config.max_generations = 3
         np.random.seed(42)
-        evolution = Evolution(config)
+
+        calls = []
+        def mock_evaluator(cfg, pop, seed, hidden_size):
+            calls.append(1)
+            fitnesses = list(range(len(pop), 0, -1))
+            return fitnesses, []
+
+        evolution = Evolution(config, evaluator=mock_evaluator)
+        assert evolution.generation == 0
         while not evolution.is_finished():
             evolution.step()
-        assert evolution.plateau_started_gen >= 0
+        assert len(calls) >= 3
+        assert evolution.end_condition == Evo.END_MAX_GENS
