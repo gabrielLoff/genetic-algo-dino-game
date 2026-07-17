@@ -39,8 +39,9 @@ class GameSimulation:
             gap_mean=config.obstacle_gap_mean,
             min_gap=config.obstacle_min_gap,
             gap_decay=config.obstacle_gap_decay,
+            pterodactyl_probability=config.pterodactyl_probability,
         )
-        brain = Brain(self._genome, hidden_size=config.hidden_layer_size)
+        brain = Brain(self._genome, hidden_size=config.hidden_layer_size, input_size=4)
         jump_ctrl = JumpController(
             threshold=0.5,
             cooldown_frames=config.jump_cooldown_frames,
@@ -56,10 +57,11 @@ class GameSimulation:
             obs_manager.update(speed, dt)
 
             distance_to_next = obs_manager.distance_to_next(dino.x, config.window_width)
-            obstacle_present = 1.0 if obs_manager.obstacle_present(dino.x) else 0.0
+            obstacle_present_flag = 1.0 if obs_manager.obstacle_present(dino.x) else 0.0
             normalized_distance = min(distance_to_next / config.window_width, 1.0)
             normalized_speed = speed / config.game_speed_max
-            inputs = np.array([normalized_distance, obstacle_present, normalized_speed])
+            normalized_height = obs_manager.nearest_obstacle_height(dino.x, config.ground_y)
+            inputs = np.array([normalized_distance, obstacle_present_flag, normalized_speed, normalized_height])
             brain_output = brain.evaluate(inputs)
 
             jumped = jump_ctrl.should_jump(brain_output)

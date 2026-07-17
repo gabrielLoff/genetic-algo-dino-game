@@ -11,6 +11,7 @@ def test_fitness_improves_over_five_generations_survival_clearance():
     config.plateau_generations = 20
     config.time_cap_seconds = 5
     config.fitness_function = "survival_clearance"
+    config.pterodactyl_probability = 0.0
     config.master_seed = 42
 
     np.random.seed(42)
@@ -37,6 +38,7 @@ def test_fitness_improves_over_five_generations_survival_only():
     config.plateau_generations = 20
     config.time_cap_seconds = 5
     config.fitness_function = "survival_only"
+    config.pterodactyl_probability = 0.0
     config.master_seed = 7
 
     np.random.seed(7)

@@ -2,7 +2,7 @@ import numpy as np
 
 
 class NeuralNetwork:
-    def __init__(self, hidden_size=6, input_size=3):
+    def __init__(self, hidden_size=6, input_size=4):
         self._input_size = input_size
         self._hidden_size = hidden_size
         self._hidden_weights = np.random.randn(hidden_size, input_size) * np.sqrt(2.0 / input_size)
@@ -25,7 +25,7 @@ class NeuralNetwork:
         ])
 
     @staticmethod
-    def from_genome(genome, hidden_size=6, input_size=3):
+    def from_genome(genome, hidden_size=6, input_size=4):
         genome = np.asarray(genome, dtype=np.float64)
         hw_len = hidden_size * input_size
         hb_len = hidden_size

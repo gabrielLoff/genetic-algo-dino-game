@@ -12,7 +12,7 @@ from game.runner import RunResult
 def test_create_population_generates_correct_number():
     pop = create_population(size=10, hidden_size=6)
     assert len(pop) == 10
-    genome_len = (6 * 3) + 6 + 6 + 1
+    genome_len = (6 * 4) + 6 + 6 + 1
     assert all(len(g) == genome_len for g in pop)
 
 
@@ -37,11 +37,11 @@ def test_tournament_select_favors_higher_fitness():
 
 
 def test_uniform_crossover_produces_child_length_match():
-    parent_a = np.array([1.0] * 31)
-    parent_b = np.array([2.0] * 31)
+    parent_a = np.array([1.0] * 37)
+    parent_b = np.array([2.0] * 37)
     np.random.seed(0)
     child = uniform_crossover(parent_a, parent_b)
-    assert len(child) == 31
+    assert len(child) == 37
     assert all(v in (1.0, 2.0) for v in child)
 
 
@@ -55,7 +55,7 @@ def test_uniform_crossover_mixes_parents():
 
 def test_gaussian_mutation_perturbs_genome():
     np.random.seed(42)
-    original = np.array([1.0] * 31)
+    original = np.array([1.0] * 37)
     mutated = gaussian_mutation(original, mutation_rate=1.0, mutation_strength=0.5)
     assert not np.array_equal(original, mutated)
 

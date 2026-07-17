@@ -2,7 +2,7 @@ import numpy as np
 from nn.network import NeuralNetwork
 
 
-def create_population(size, hidden_size=6, input_size=3):
+def create_population(size, hidden_size=6, input_size=4):
     return [
         NeuralNetwork(hidden_size=hidden_size, input_size=input_size).to_genome()
         for _ in range(size)

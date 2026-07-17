@@ -1,5 +1,6 @@
 import numpy as np
 from game.obstacle import Cactus, CACTUS_SIZE_SMALL, CACTUS_SIZE_TALL
+from game.obstacle import Pterodactyl, PTERO_HEIGHT_LOW, PTERO_HEIGHT_MID, PTERO_HEIGHT_HIGH
 from game.obstacle import GameSpeed, ObstacleManager
 from game.geometry import aabb_collides
 
@@ -111,3 +112,86 @@ class TestObstacleManager:
         ]
         om.update(speed=400, dt=0.01)
         assert len(om.obstacles) == 1
+
+
+class TestPterodactyl:
+    def test_initial_position_and_height(self):
+        p = Pterodactyl(x=600, height_level=PTERO_HEIGHT_HIGH)
+        assert p.x == 600
+        assert p.height_level == PTERO_HEIGHT_HIGH
+        assert p.width > 0
+        assert p.height > 0
+
+    def test_scrolls_left(self):
+        p = Pterodactyl(x=500, height_level=PTERO_HEIGHT_MID)
+        p.update(speed=400, dt=1.0)
+        assert p.x == 100
+
+    def test_hitbox(self):
+        p = Pterodactyl(x=200, height_level=PTERO_HEIGHT_LOW)
+        hb = p.hitbox()
+        assert isinstance(hb, tuple)
+        assert len(hb) == 4
+
+    def test_is_off_screen(self):
+        p = Pterodactyl(x=-40, height_level=PTERO_HEIGHT_MID)
+        assert p.is_off_screen()
+
+        p2 = Pterodactyl(x=50, height_level=PTERO_HEIGHT_LOW)
+        assert not p2.is_off_screen()
+
+    def test_sprite_top_varies_by_height(self):
+        ground_y = 320
+        p_low = Pterodactyl(x=500, height_level=PTERO_HEIGHT_LOW)
+        p_high = Pterodactyl(x=500, height_level=PTERO_HEIGHT_HIGH)
+        assert p_high.sprite_top(ground_y) < p_low.sprite_top(ground_y)
+
+
+class TestObstacleManagerPterodactyl:
+    def test_spawns_pterodactyl_when_probability_is_one(self):
+        np.random.seed(0)
+        om = ObstacleManager(screen_width=800, ground_y=320, pterodactyl_probability=1.0)
+        om._next_spawn = 0
+        om.update(speed=400, dt=0.0)
+        assert len(om.obstacles) > 0
+        assert isinstance(om.obstacles[0], Pterodactyl)
+
+    def test_spawns_only_cactus_when_probability_is_zero(self):
+        np.random.seed(0)
+        om = ObstacleManager(screen_width=800, ground_y=320, pterodactyl_probability=0.0)
+        om._next_spawn = 0
+        om.update(speed=400, dt=0.0)
+        assert len(om.obstacles) > 0
+        assert all(isinstance(o, Cactus) for o in om.obstacles)
+
+    def test_nearest_obstacle_height_returns_zero_for_cactus(self):
+        om = ObstacleManager(screen_width=800, ground_y=320)
+        om.obstacles = [Cactus(x=300, size=CACTUS_SIZE_SMALL)]
+        assert om.nearest_obstacle_height(80, 320) == 0.0
+
+    def test_nearest_obstacle_height_returns_fraction_for_pterodactyl(self):
+        om = ObstacleManager(screen_width=800, ground_y=320)
+        om.obstacles = [Pterodactyl(x=300, height_level=PTERO_HEIGHT_HIGH)]
+        height = om.nearest_obstacle_height(80, 320)
+        assert height >= 0.4
+
+    def test_nearest_obstacle_height_returns_zero_when_no_obstacles(self):
+        om = ObstacleManager(screen_width=800, ground_y=320)
+        om.obstacles = []
+        assert om.nearest_obstacle_height(80, 320) == 0.0
+
+    def test_high_pterodactyl_no_collision_with_grounded_dino(self):
+        from game.dino import Dino
+        om = ObstacleManager(screen_width=800, ground_y=320, pterodactyl_probability=0.0)
+        dino = Dino(ground_y=320, collision_inset=0.0)
+        p = Pterodactyl(x=80, height_level=PTERO_HEIGHT_HIGH)
+        om.obstacles = [p]
+        assert not om.collision_with(dino.hitbox(), 320)
+
+    def test_low_pterodactyl_collides_with_grounded_dino(self):
+        from game.dino import Dino
+        om = ObstacleManager(screen_width=800, ground_y=320, pterodactyl_probability=0.0)
+        dino = Dino(ground_y=320, collision_inset=0.0)
+        p = Pterodactyl(x=80, height_level=PTERO_HEIGHT_LOW)
+        om.obstacles = [p]
+        assert om.collision_with(dino.hitbox(), 320)

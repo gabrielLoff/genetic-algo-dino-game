@@ -35,6 +35,8 @@ PARAM_SPECS = [
      "Average distance between obstacles (exponential distribution)"),
     ("obstacle_gap_decay", 0.001, 0.0, 0.1, "Game", "Gap Decay", float,
      "How fast the average gap shrinks over time"),
+    ("pterodactyl_probability", 0.3, 0.0, 1.0, "Game", "Pterodactyl Prob.", float,
+     "Probability a spawned obstacle is a pterodactyl instead of a cactus"),
     ("time_cap_seconds", 30, 1, 300, "Game", "Time Cap (s)", float,
      "Maximum seconds a brain can survive in a single run"),
     ("jump_cooldown_frames", 5, 1, 30, "Game", "Jump Cooldown", int,
@@ -81,6 +83,7 @@ class Config:
     obstacle_min_gap: float = 200
     obstacle_gap_mean: float = 500
     obstacle_gap_decay: float = 0.001
+    pterodactyl_probability: float = 0.3
     time_cap_seconds: float = 30
     jump_cooldown_frames: int = 5
     collision_inset: float = 0.15

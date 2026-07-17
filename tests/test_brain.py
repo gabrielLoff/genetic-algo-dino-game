@@ -12,7 +12,7 @@ class TestBrain:
     def test_brain_evaluate_returns_float(self):
         genome = NeuralNetwork(hidden_size=6).to_genome()
         brain = Brain(genome, hidden_size=6)
-        inputs = np.array([0.5, 1.0, 0.3])
+        inputs = np.array([0.5, 1.0, 0.3, 0.0])
         output = brain.evaluate(inputs)
         assert isinstance(output, float)
 
@@ -20,7 +20,7 @@ class TestBrain:
         genome = NeuralNetwork(hidden_size=6).to_genome()
         brain = Brain(genome, hidden_size=6)
         for _ in range(100):
-            inputs = np.random.random(3)
+            inputs = np.random.random(4)
             output = brain.evaluate(inputs)
             assert 0.0 <= output <= 1.0
 

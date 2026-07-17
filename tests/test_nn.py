@@ -7,10 +7,10 @@ def test_nn_creates_with_he_initialization():
     hidden_weights = nn._hidden_weights
     hidden_bias = nn._hidden_bias
 
-    assert hidden_weights.shape == (6, 3)
+    assert hidden_weights.shape == (6, 4)
     assert hidden_bias.shape == (6,)
 
-    std_expected = np.sqrt(2.0 / 3)
+    std_expected = np.sqrt(2.0 / 4)
     assert abs(np.std(hidden_weights) - std_expected) < 0.5
 
     output_weights = nn._output_weights
@@ -22,14 +22,14 @@ def test_nn_creates_with_he_initialization():
 
 def test_nn_forward_pass_produces_output_between_0_and_1():
     nn = NeuralNetwork(hidden_size=6)
-    inputs = np.array([0.5, 0.3, 1.0])
+    inputs = np.array([0.5, 0.3, 1.0, 0.0])
     output = nn.forward(inputs)
     assert 0.0 <= output <= 1.0
 
 
 def test_nn_forward_pass_is_deterministic():
     nn = NeuralNetwork(hidden_size=6)
-    inputs = np.array([0.5, 0.3, 1.0])
+    inputs = np.array([0.5, 0.3, 1.0, 0.0])
     out1 = nn.forward(inputs)
     out2 = nn.forward(inputs)
     assert out1 == out2
@@ -38,15 +38,15 @@ def test_nn_forward_pass_is_deterministic():
 def test_nn_configurable_hidden_size():
     nn_small = NeuralNetwork(hidden_size=4)
     nn_large = NeuralNetwork(hidden_size=10)
-    assert nn_small._hidden_weights.shape == (4, 3)
-    assert nn_large._hidden_weights.shape == (10, 3)
+    assert nn_small._hidden_weights.shape == (4, 4)
+    assert nn_large._hidden_weights.shape == (10, 4)
 
 
 def test_to_genome_returns_flat_list_of_all_weights_and_biases():
     nn = NeuralNetwork(hidden_size=6)
     genome = nn.to_genome()
     assert isinstance(genome, np.ndarray)
-    expected_len = (6 * 3) + 6 + 6 + 1
+    expected_len = (6 * 4) + 6 + 6 + 1
     assert len(genome) == expected_len
 
 
@@ -64,7 +64,7 @@ def test_from_genome_preserves_forward_pass():
     nn = NeuralNetwork(hidden_size=6)
     genome = nn.to_genome()
     restored = NeuralNetwork.from_genome(genome, hidden_size=6)
-    inputs = np.array([0.2, 0.7, 0.9])
+    inputs = np.array([0.2, 0.7, 0.9, 0.0])
     assert nn.forward(inputs) == restored.forward(inputs)
 
 

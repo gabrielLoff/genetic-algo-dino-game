@@ -3,7 +3,7 @@ from nn.network import NeuralNetwork
 
 
 class Brain:
-    def __init__(self, genome, hidden_size=6, input_size=3):
+    def __init__(self, genome, hidden_size=6, input_size=4):
         self._nn = NeuralNetwork.from_genome(genome, hidden_size=hidden_size, input_size=input_size)
         self._genome = np.array(genome, dtype=np.float64, copy=True)
 
