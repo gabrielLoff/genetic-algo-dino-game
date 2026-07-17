@@ -48,6 +48,20 @@ class Evolution:
             return np.random.randint(0, 2**31)
         return derive_seed(ms, gen)
 
+    def _compute_diversity(self):
+        if len(self.population) < 2:
+            return 0.0
+        genomes = np.array(self.population)
+        genome_len = genomes.shape[1]
+        sample = genomes[:min(50, len(genomes))]
+        diff = sample[:, None, :] - sample[None, :, :]
+        distances = np.sqrt(np.sum(diff ** 2, axis=-1))
+        triu = np.triu(distances, k=1)
+        nonzero = triu[triu > 0]
+        if len(nonzero) == 0:
+            return 0.0
+        return float(np.mean(nonzero) / genome_len)
+
     def _evaluate_and_track(self, seed):
         fitnesses, results = self._evaluator(
             self._config,
@@ -61,6 +75,7 @@ class Evolution:
 
         cleared = [r.obstacles_cleared for r in results]
         avg_cleared = sum(cleared) / len(cleared) if cleared else 0.0
+        diversity = self._compute_diversity()
 
         if gen_best > self._best_fitness:
             self._best_fitness = gen_best
@@ -76,6 +91,7 @@ class Evolution:
             "avg_fitness": gen_avg,
             "best_genome": self.population[best_idx].copy(),
             "avg_cleared": avg_cleared,
+            "diversity": diversity,
         })
         return fitnesses
 

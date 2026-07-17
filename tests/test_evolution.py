@@ -22,21 +22,25 @@ class TestSeedDerivation:
         assert sa != sb
 
 
+def _make_config():
+    config = Config()
+    config.population_size = 10
+    config.hidden_layer_size = 4
+    config.time_cap_seconds = 0.1
+    config.mutation_rate = 0.2
+    config.mutation_strength = 0.1
+    config.tournament_size_percent = 0.3
+    config.elitism_rate = 0.1
+    config.max_generations = 5
+    config.plateau_generations = 10
+    config.fitness_function = "survival_clearance"
+    config.master_seed = 42
+    return config
+
+
 class TestEvolution:
     def _make_config(self):
-        config = Config()
-        config.population_size = 10
-        config.hidden_layer_size = 4
-        config.time_cap_seconds = 0.1
-        config.mutation_rate = 0.2
-        config.mutation_strength = 0.1
-        config.tournament_size_percent = 0.3
-        config.elitism_rate = 0.1
-        config.max_generations = 5
-        config.plateau_generations = 10
-        config.fitness_function = "survival_clearance"
-        config.master_seed = 42
-        return config
+        return _make_config()
 
     def test_evolution_initializes_generation_zero(self):
         config = self._make_config()
@@ -146,3 +150,50 @@ class TestEvolution:
             evolution.step()
         assert len(calls) >= 3
         assert evolution.end_condition == Evo.END_MAX_GENS
+
+
+class TestDiversity:
+    def test_diversity_zero_for_identical_population(self):
+        config = _make_config()
+        mock_pop = [np.ones(37) for _ in range(10)]
+        config.population_size = len(mock_pop)
+        np.random.seed(42)
+
+        calls = []
+        def mock_evaluator(cfg, pop, seed, hidden_size):
+            calls.append(1)
+            return list(range(len(pop), 0, -1)), []
+
+        evolution = Evolution(config, evaluator=mock_evaluator)
+        evolution.population = mock_pop
+        diversity = evolution._compute_diversity()
+        assert diversity == 0.0
+
+    def test_diversity_positive_for_random_population(self):
+        from ga.engine import create_population
+        config = _make_config()
+        np.random.seed(42)
+        pop = create_population(size=10, hidden_size=config.hidden_layer_size, input_size=4)
+
+        calls = []
+        def mock_evaluator(cfg, p, seed, hidden_size):
+            calls.append(1)
+            return [1.0] * len(p), []
+
+        evolution = Evolution(config, evaluator=mock_evaluator)
+        evolution.population = pop
+        diversity = evolution._compute_diversity()
+        assert diversity > 0.0
+
+    def test_diversity_stored_in_history(self):
+        config = _make_config()
+        config.max_generations = 3
+        np.random.seed(42)
+
+        evolution = Evolution(config)
+        assert "diversity" in evolution.history[-1]
+        while not evolution.is_finished():
+            evolution.step()
+        for record in evolution.history:
+            assert "diversity" in record
+            assert record["diversity"] >= 0.0

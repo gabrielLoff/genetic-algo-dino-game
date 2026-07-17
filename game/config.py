@@ -37,6 +37,8 @@ PARAM_SPECS = [
      "How fast the average gap shrinks over time"),
     ("pterodactyl_probability", 0.3, 0.0, 1.0, "Game", "Pterodactyl Prob.", float,
      "Probability a spawned obstacle is a pterodactyl instead of a cactus"),
+    ("diversity_warning_threshold", 0.05, 0.0, 1.0, "Game", "Diversity Warn", float,
+     "Show low-diversity warning when mean pairwise genome distance drops below this"),
     ("time_cap_seconds", 30, 1, 300, "Game", "Time Cap (s)", float,
      "Maximum seconds a brain can survive in a single run"),
     ("jump_cooldown_frames", 5, 1, 30, "Game", "Jump Cooldown", int,
@@ -84,6 +86,7 @@ class Config:
     obstacle_gap_mean: float = 500
     obstacle_gap_decay: float = 0.001
     pterodactyl_probability: float = 0.3
+    diversity_warning_threshold: float = 0.05
     time_cap_seconds: float = 30
     jump_cooldown_frames: int = 5
     collision_inset: float = 0.15

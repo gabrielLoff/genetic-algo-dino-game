@@ -38,6 +38,8 @@ class DashboardWindow:
         bests = [r["best_fitness"] for r in evolution.history]
         avgs = [r["avg_fitness"] for r in evolution.history]
         cleared = [r.get("avg_cleared", 0.0) for r in evolution.history]
+        diversities = [r.get("diversity", 0.0) for r in evolution.history]
+        threshold = evolution._config.diversity_warning_threshold
 
         self._ax_fitness.clear()
         self._ax_fitness.plot(generations, bests, "b-", label="Best")
@@ -50,6 +52,10 @@ class DashboardWindow:
         if evolution.end_condition == Evolution.END_PLATEAU:
             self._ax_fitness.axvline(x=evolution.plateau_started_gen, color="red",
                                      linestyle="--", alpha=0.5, label="Plateau start")
+
+        for i, d in enumerate(diversities):
+            if d > 0 and d < threshold:
+                self._ax_fitness.axvspan(i - 0.4, i + 0.4, color="red", alpha=0.1)
 
         self._ax_cleared.clear()
         self._ax_cleared.plot(generations, cleared, "g-o", label="Cleared", markersize=3)
@@ -65,6 +71,13 @@ class DashboardWindow:
             f"Population: {evolution._config.population_size}",
             f"Best fitness: {evolution.best_fitness:.1f}",
         ]
+        if diversities:
+            current_div = diversities[-1]
+            lines.append(f"Diversity: {current_div:.4f}")
+            if current_div > 0 and current_div < threshold:
+                lines.append("")
+                lines.append("Low diversity -")
+                lines.append("population converging")
         if evolution.end_condition != Evolution.END_RUNNING:
             label = _END_LABELS.get(evolution.end_condition, "Finished")
             lines += ["", f"Status: {label}"]
