@@ -124,8 +124,6 @@ class ConfigScreen:
 
         y = _VIEW_TOP
         for gi, group in enumerate(self._menu._groups):
-            if gi > 0:
-                pass
             for pi in range(len(group.params)):
                 if gi == self._selected_group and pi == self._param_map[self._selected_param][1]:
                     screen_y = y - self._scroll_offset
@@ -134,7 +132,8 @@ class ConfigScreen:
                     elif screen_y + row_h > view_bottom:
                         self._scroll_offset += (screen_y + row_h - view_bottom)
                     return
-                y += row_h
+                if gi == self._selected_group:
+                    y += row_h
             y += 24
 
     def _current_group(self):
