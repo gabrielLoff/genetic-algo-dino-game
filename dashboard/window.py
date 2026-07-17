@@ -98,7 +98,6 @@ class DashboardWindow:
 
         self._fig.canvas.draw()
         self._fig.canvas.flush_events()
-        plt.pause(0.001)
 
     def close(self):
         plt.close(self._fig)
