@@ -80,6 +80,7 @@ def test_scroll_to_visible_keeps_item_in_viewport():
 
         y = _VIEW_TOP
         for gi, group in enumerate(cs._menu._groups):
+            y += 24
             for pi in range(len(group.params)):
                 if gi == cs._selected_group and pi == cs._param_map[cs._selected_param][1]:
                     screen_y = y - cs._scroll_offset
@@ -92,6 +93,5 @@ def test_scroll_to_visible_keeps_item_in_viewport():
                     break
                 if gi == cs._selected_group:
                     y += 20
-            y += 24
     finally:
         pygame.quit()
