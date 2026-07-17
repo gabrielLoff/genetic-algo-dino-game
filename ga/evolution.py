@@ -47,6 +47,7 @@ class Evolution:
             size=self._config.population_size,
             hidden_size=self._config.hidden_layer_size,
             input_size=4,
+            num_hidden_layers=self._config.num_hidden_layers,
         )
         self._fitnesses = self._evaluate_and_track(seed=self._seed_for(0))
 

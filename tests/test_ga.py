@@ -18,6 +18,14 @@ def test_create_population_generates_correct_number():
     assert all(len(g) == genome_len for g in pop)
 
 
+def test_create_population_two_layers_generates_correct_genome_length():
+    pop = create_population(size=5, hidden_size=6, num_hidden_layers=2)
+    from nn.network import NeuralNetwork
+    expected = NeuralNetwork.genome_size(hidden_size=6, num_hidden_layers=2)
+    assert len(pop) == 5
+    assert all(len(g) == expected for g in pop)
+
+
 def test_create_population_uses_he_initialization():
     np.random.seed(42)
     pop = create_population(size=5, hidden_size=6)

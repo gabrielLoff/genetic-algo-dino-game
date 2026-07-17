@@ -24,7 +24,9 @@ PARAM_SPECS = [
     ("master_seed", None, None, None, "Genetic Algorithm", "Master Seed", None,
      "Fixed seed for reproducible evolution; Random if None"),
     ("hidden_layer_size", 6, 1, 100, "Neural Network", "Hidden Layer Size", int,
-     "Number of neurons in the hidden layer of the brain"),
+     "Number of neurons in each hidden layer of the brain"),
+    ("num_hidden_layers", 1, 1, 3, "Neural Network", "Hidden Layers", int,
+     "Number of hidden layers in the brain (1-3)"),
     ("game_speed_initial", 400, 50, 2000, "Game", "Initial Speed", float,
      "Starting scroll speed (pixels/sec)"),
     ("game_speed_max", 1000, 100, 5000, "Game", "Max Speed", float,
@@ -76,6 +78,7 @@ DEFAULT_CONFIG = {
 class Config:
     population_size: int = 100
     hidden_layer_size: int = 6
+    num_hidden_layers: int = 1
     mutation_rate: float = 0.1
     mutation_strength: float = 0.2
     tournament_size_percent: float = 0.1

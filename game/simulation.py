@@ -41,7 +41,7 @@ class GameSimulation:
             gap_decay=config.obstacle_gap_decay,
             pterodactyl_probability=config.pterodactyl_probability,
         )
-        brain = Brain(self._genome, hidden_size=config.hidden_layer_size, input_size=4)
+        brain = Brain(self._genome, hidden_size=config.hidden_layer_size, input_size=4, num_hidden_layers=config.num_hidden_layers)
         jump_ctrl = JumpController(
             threshold=0.5,
             cooldown_frames=config.jump_cooldown_frames,

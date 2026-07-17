@@ -4,8 +4,8 @@ from nn.network import NeuralNetwork
 
 def test_nn_creates_with_he_initialization():
     nn = NeuralNetwork(hidden_size=6)
-    hidden_weights = nn._hidden_weights
-    hidden_bias = nn._hidden_bias
+    hidden_weights = nn._hidden_weights[0]
+    hidden_bias = nn._hidden_biases[0]
 
     assert hidden_weights.shape == (6, 4)
     assert hidden_bias.shape == (6,)
@@ -38,8 +38,8 @@ def test_nn_forward_pass_is_deterministic():
 def test_nn_configurable_hidden_size():
     nn_small = NeuralNetwork(hidden_size=4)
     nn_large = NeuralNetwork(hidden_size=10)
-    assert nn_small._hidden_weights.shape == (4, 4)
-    assert nn_large._hidden_weights.shape == (10, 4)
+    assert nn_small._hidden_weights[0].shape == (4, 4)
+    assert nn_large._hidden_weights[0].shape == (10, 4)
 
 
 def test_to_genome_returns_flat_list_of_all_weights_and_biases():
@@ -54,8 +54,8 @@ def test_from_genome_restores_weights_and_biases():
     nn = NeuralNetwork(hidden_size=6)
     genome = nn.to_genome()
     restored = NeuralNetwork.from_genome(genome, hidden_size=6)
-    assert np.array_equal(nn._hidden_weights, restored._hidden_weights)
-    assert np.array_equal(nn._hidden_bias, restored._hidden_bias)
+    assert np.array_equal(nn._hidden_weights[0], restored._hidden_weights[0])
+    assert np.array_equal(nn._hidden_biases[0], restored._hidden_biases[0])
     assert np.array_equal(nn._output_weights, restored._output_weights)
     assert nn._output_bias == restored._output_bias
 
@@ -72,4 +72,60 @@ def test_genome_is_mutable_copy():
     nn = NeuralNetwork(hidden_size=6)
     genome = nn.to_genome()
     genome[0] = 999.0
-    assert nn._hidden_weights[0, 0] != 999.0
+    assert nn._hidden_weights[0][0, 0] != 999.0
+
+
+def test_nn_single_layer_backward_compat():
+    nn = NeuralNetwork(hidden_size=6, num_hidden_layers=1)
+    genome = nn.to_genome()
+    expected_len = (6 * 4) + 6 + 6 + 1
+    assert len(genome) == expected_len
+
+
+def test_nn_two_layers_forward_pass():
+    nn = NeuralNetwork(hidden_size=6, num_hidden_layers=2)
+    inputs = np.array([0.5, 0.3, 1.0, 0.0])
+    output = nn.forward(inputs)
+    assert 0.0 <= output <= 1.0
+
+
+def test_nn_three_layers_forward_pass():
+    nn = NeuralNetwork(hidden_size=6, num_hidden_layers=3)
+    inputs = np.array([0.5, 0.3, 1.0, 0.0])
+    output = nn.forward(inputs)
+    assert 0.0 <= output <= 1.0
+
+
+def test_genome_size_single_layer():
+    assert NeuralNetwork.genome_size(hidden_size=6, num_hidden_layers=1) == 37
+
+
+def test_genome_size_two_layers():
+    assert NeuralNetwork.genome_size(hidden_size=6, num_hidden_layers=2) == 79
+
+
+def test_genome_size_three_layers():
+    assert NeuralNetwork.genome_size(hidden_size=6, num_hidden_layers=3) == 121
+
+
+def test_two_layers_genome_roundtrip():
+    nn = NeuralNetwork(hidden_size=6, num_hidden_layers=2)
+    genome = nn.to_genome()
+    restored = NeuralNetwork.from_genome(genome, hidden_size=6, num_hidden_layers=2)
+    inputs = np.array([0.2, 0.7, 0.9, 0.0])
+    assert nn.forward(inputs) == restored.forward(inputs)
+
+
+def test_three_layers_genome_roundtrip():
+    nn = NeuralNetwork(hidden_size=6, num_hidden_layers=3)
+    genome = nn.to_genome()
+    restored = NeuralNetwork.from_genome(genome, hidden_size=6, num_hidden_layers=3)
+    inputs = np.array([0.2, 0.7, 0.9, 0.0])
+    assert nn.forward(inputs) == restored.forward(inputs)
+
+
+def test_multi_layer_forward_deterministic():
+    for num_layers in (2, 3):
+        nn = NeuralNetwork(hidden_size=6, num_hidden_layers=num_layers)
+        inputs = np.array([0.5, 0.3, 1.0, 0.0])
+        assert nn.forward(inputs) == nn.forward(inputs)
