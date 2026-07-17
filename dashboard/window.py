@@ -35,6 +35,7 @@ class DashboardWindow:
         generations = [r["generation"] for r in evolution.history]
         bests = [r["best_fitness"] for r in evolution.history]
         avgs = [r["avg_fitness"] for r in evolution.history]
+        cleared = [r.get("avg_cleared", 0.0) for r in evolution.history]
 
         self._ax_chart.clear()
         self._ax_chart.plot(generations, bests, "b-", label="Best")
@@ -42,8 +43,16 @@ class DashboardWindow:
         self._ax_chart.set_xlabel("Generation")
         self._ax_chart.set_ylabel("Fitness")
         self._ax_chart.set_title(f"Generation {evolution.generation}")
-        self._ax_chart.legend(loc="upper left")
         self._ax_chart.grid(True, alpha=0.3)
+
+        ax2 = self._ax_chart.twinx()
+        ax2.plot(generations, cleared, "g-o", label="Cleared", markersize=3)
+        ax2.set_ylabel("Obstacles Cleared (avg)")
+        ax2.grid(False)
+
+        lines1, labels1 = self._ax_chart.get_legend_handles_labels()
+        lines2, labels2 = ax2.get_legend_handles_labels()
+        self._ax_chart.legend(lines1 + lines2, labels1 + labels2, loc="upper left")
 
         if evolution.end_condition == Evolution.END_PLATEAU:
             self._ax_chart.axvline(x=evolution.plateau_started_gen, color="red",

@@ -49,7 +49,7 @@ class Evolution:
         return derive_seed(ms, gen)
 
     def _evaluate_and_track(self, seed):
-        fitnesses, _results = self._evaluator(
+        fitnesses, results = self._evaluator(
             self._config,
             self.population,
             seed=seed,
@@ -58,6 +58,9 @@ class Evolution:
         gen_best = max(fitnesses)
         gen_avg = sum(fitnesses) / len(fitnesses)
         best_idx = fitnesses.index(gen_best)
+
+        cleared = [r.obstacles_cleared for r in results]
+        avg_cleared = sum(cleared) / len(cleared) if cleared else 0.0
 
         if gen_best > self._best_fitness:
             self._best_fitness = gen_best
@@ -72,6 +75,7 @@ class Evolution:
             "best_fitness": gen_best,
             "avg_fitness": gen_avg,
             "best_genome": self.population[best_idx].copy(),
+            "avg_cleared": avg_cleared,
         })
         return fitnesses
 
