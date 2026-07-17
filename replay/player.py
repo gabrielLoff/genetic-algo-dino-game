@@ -1,7 +1,7 @@
 import json
 import pygame
 from replay.logger import GameplayLog, FrameRecord
-from game.sprites import render_dino, render_cactus, render_ground, render_background
+from game.sprites import render_dino, render_cactus, render_pterodactyl, render_ground, render_background
 
 
 class ReplayPlayer:
@@ -47,7 +47,10 @@ class ReplayPlayer:
         render_ground(self._screen, ground_y, ground_h, ground_offset)
 
         for obs in record.obstacles:
-            render_cactus(self._screen, obs["x"], ground_y, obs.get("size", "small"))
+            if "height_level" in obs:
+                render_pterodactyl(self._screen, obs["x"], ground_y, obs["height_level"])
+            else:
+                render_cactus(self._screen, obs["x"], ground_y, obs.get("size", "small"))
 
         if ghost_logs and ghost_labels:
             for gi, ghost_log in enumerate(ghost_logs):

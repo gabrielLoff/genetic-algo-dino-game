@@ -51,6 +51,18 @@ def render_cactus(screen, x, ground_y, size):
         screen.blit(sprite, (x, ground_y - sprite.get_height()))
 
 
+def render_pterodactyl(screen, x, ground_y, height_level):
+    from game.obstacle import _PTERO_DIMS, _PTERO_HEIGHT_Y
+
+    width, height = _PTERO_DIMS
+    height_ratio = _PTERO_HEIGHT_Y.get(height_level, 0.5)
+    y = int(ground_y - height - ground_y * height_ratio)
+
+    sprite = get_sprite("pterodactyl.png", width, height, fallback_color=(139, 69, 19))
+    if sprite:
+        screen.blit(sprite, (x, y))
+
+
 def render_ground(screen, ground_y, ground_h, offset):
     sprite = get_sprite("ground.png", 800, ground_h, fallback_color=(83, 83, 83))
     if sprite:
