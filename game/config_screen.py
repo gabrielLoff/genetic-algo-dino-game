@@ -48,6 +48,8 @@ class ConfigMenu:
 _FITNESS_OPTIONS = ["survival_only", "survival_clearance", "near_miss", "efficiency"]
 _GHOST_OPTIONS = ["off", "worst", "random", "top"]
 
+_VIEW_TOP = 75
+
 
 class ConfigScreen:
     def __init__(self, config, screen):
@@ -117,19 +119,18 @@ class ConfigScreen:
                 self._input_buffer += "."
 
     def _scroll_to_visible(self):
-        view_top = 75
         view_bottom = self._screen.get_height() - 55
         row_h = 20
 
-        y = view_top
+        y = _VIEW_TOP
         for gi, group in enumerate(self._menu._groups):
             if gi > 0:
                 pass
             for pi in range(len(group.params)):
                 if gi == self._selected_group and pi == self._param_map[self._selected_param][1]:
                     screen_y = y - self._scroll_offset
-                    if screen_y < view_top:
-                        self._scroll_offset -= (view_top - screen_y)
+                    if screen_y < _VIEW_TOP:
+                        self._scroll_offset -= (_VIEW_TOP - screen_y)
                     elif screen_y + row_h > view_bottom:
                         self._scroll_offset += (screen_y + row_h - view_bottom)
                     return
@@ -351,14 +352,16 @@ class ConfigScreen:
             return
 
         if not self._compare_mode:
-            y = 75
+            y = _VIEW_TOP
             group_names = sorted(set(g.name for g in self._menu._groups))
             current_group_name = self._current_group().name
 
             for group_name in group_names:
+                screen_y = y - self._scroll_offset
                 color = (255, 255, 100) if group_name == current_group_name else (150, 150, 150)
-                label = self._font.render(group_name.upper(), True, color)
-                self._screen.blit(label, (20, y - self._scroll_offset))
+                if screen_y >= _VIEW_TOP:
+                    label = self._font.render(group_name.upper(), True, color)
+                    self._screen.blit(label, (20, screen_y))
                 y += 24
 
                 if group_name == current_group_name:
@@ -371,22 +374,24 @@ class ConfigScreen:
                         if selected:
                             selected_desc = desc
 
-                        prefix = ">" if selected else " "
-                        value = getattr(self._config, key)
-                        if selected and self._input_mode:
-                            value_str = self._input_buffer + "_"
-                        elif value is None:
-                            value_str = "Random"
-                        elif isinstance(value, str):
-                            value_str = value
-                        elif isinstance(value, float):
-                            value_str = f"{value:.3f}"
-                        else:
-                            value_str = str(value)
+                        screen_y = y - self._scroll_offset
+                        if screen_y >= _VIEW_TOP:
+                            prefix = ">" if selected else " "
+                            value = getattr(self._config, key)
+                            if selected and self._input_mode:
+                                value_str = self._input_buffer + "_"
+                            elif value is None:
+                                value_str = "Random"
+                            elif isinstance(value, str):
+                                value_str = value
+                            elif isinstance(value, float):
+                                value_str = f"{value:.3f}"
+                            else:
+                                value_str = str(value)
 
-                        color = (255, 255, 255) if selected else (180, 180, 200)
-                        text = self._font.render(f"{prefix} {label:25s} {value_str:>12s}", True, color)
-                        self._screen.blit(text, (30, y - self._scroll_offset))
+                            color = (255, 255, 255) if selected else (180, 180, 200)
+                            text = self._font.render(f"{prefix} {label:25s} {value_str:>12s}", True, color)
+                            self._screen.blit(text, (30, screen_y))
                         y += 20
 
             if selected_desc and not self._focus_preset:

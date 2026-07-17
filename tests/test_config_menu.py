@@ -1,5 +1,6 @@
-from game.config_screen import ConfigMenu, ParamGroup
+from game.config_screen import ConfigMenu, ParamGroup, ConfigScreen, _VIEW_TOP
 from game.config import Config
+import pygame
 
 
 def test_param_group_creates_with_name_and_params():
@@ -32,3 +33,19 @@ def test_config_menu_updates_config_on_value_change():
     orig = config.population_size
     menu.adjust_param(1.5)
     assert config.population_size != orig
+
+
+def test_render_handles_large_scroll_offset():
+    pygame.init()
+    screen = pygame.display.set_mode((800, 400))
+    config = Config()
+    cs = ConfigScreen(config, screen)
+    cs._scroll_offset = 200
+    try:
+        cs._render()
+    finally:
+        pygame.quit()
+
+
+def test_view_top_constant_exists():
+    assert _VIEW_TOP == 75
