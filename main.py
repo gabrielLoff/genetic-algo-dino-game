@@ -95,6 +95,8 @@ def _run_evolution(config, log_store):
           f"avg={evolution.history[-1]['avg_fitness']:8.1f}")
     dashboard.update(evolution)
 
+    remaining = 0
+
     while not evolution.is_finished():
         evolution.step()
         dashboard.update(evolution)
@@ -106,6 +108,29 @@ def _run_evolution(config, log_store):
         last = evolution.history[-1]
         print(f"Gen {last['generation']:3d} | best={last['best_fitness']:8.1f} "
               f"avg={last['avg_fitness']:8.1f}")
+
+        remaining -= 1
+        if remaining > 0 and not evolution.is_finished():
+            continue
+
+        print("[Enter=next gen | N=run N more | R=replay best | Q=quit]")
+        while True:
+            cmd = input("> ").strip().lower()
+            if cmd == "":
+                remaining = 0
+                break
+            elif cmd == "q":
+                remaining = 0
+                evolution.stop(Evolution.END_QUIT)
+                break
+            elif cmd == "r":
+                _replay_best(config, log_store)
+                print("[Enter=next gen | N=run N more | R=replay best | Q=quit]")
+            elif cmd.isdigit():
+                remaining = int(cmd) - 1
+                break
+            else:
+                print("Unknown command. Enter=next, N=run N, R=replay, Q=quit")
 
     reason = evolution.end_condition
 
