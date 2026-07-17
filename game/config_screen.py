@@ -184,6 +184,9 @@ class ConfigScreen:
                     self._build_param_map()
                     self._selected_group = 0
                     self._selected_param = 0
+            elif key == pygame.K_SPACE:
+                self._started = True
+                self._running = False
             elif key == pygame.K_ESCAPE:
                 self._running = False
             elif key == pygame.K_LEFT:
@@ -197,10 +200,13 @@ class ConfigScreen:
                 key_name = self._current_key()
                 group = self._current_group()
                 default, _min, _max, _label, _desc = group.params[key_name]
-                if not isinstance(default, str) and default is not None:
+                if isinstance(default, str) or default is None:
+                    self._adjust_param(1)
+                else:
                     self._input_mode = True
                     self._input_buffer = str(getattr(self._config, key_name))
-                    return
+                return
+            elif key == pygame.K_SPACE:
                 self._started = True
                 self._running = False
             elif key == pygame.K_ESCAPE:
@@ -308,10 +314,10 @@ class ConfigScreen:
             msg_rect = msg.get_rect(center=(self._screen.get_width() // 2, self._screen.get_height() // 2))
             self._screen.blit(msg, msg_rect)
             if self._focus_preset:
-                hint = self._font.render("TAB=switch focus  ENTER=load preset  ARROWS=cycle presets", True, (120, 120, 140))
+                hint = self._font.render("TAB=switch focus  SPACE=Start  ENTER=load preset  ARROWS=cycle presets", True, (120, 120, 140))
                 self._screen.blit(hint, (20, self._screen.get_height() - 30))
             else:
-                hint = self._font.render("TAB=switch focus  ENTER=load preset  ARROWS=adjust params", True, (120, 120, 140))
+                hint = self._font.render("TAB=switch focus  SPACE=Start  ENTER=load preset  ARROWS=adjust params", True, (120, 120, 140))
                 self._screen.blit(hint, (20, self._screen.get_height() - 30))
             pygame.display.flip()
             return
@@ -359,8 +365,8 @@ class ConfigScreen:
             self._screen.blit(desc_text, (20, self._screen.get_height() - 50))
 
         if self._focus_preset:
-            hint = self._font.render("TAB=switch focus  ENTER=load preset  ARROWS=cycle presets", True, (120, 120, 140))
+            hint = self._font.render("TAB=switch focus  SPACE=Start  ENTER=load preset  ARROWS=cycle presets", True, (120, 120, 140))
         else:
-            hint = self._font.render("ENTER=load preset  ESC=Quit  ARROWS=Navigate  LEFT/RIGHT=Adjust", True, (120, 120, 140))
+            hint = self._font.render("SPACE=Start  ESC=Quit  ENTER=Edit  ARROWS=Navigate  LEFT/RIGHT=Adjust", True, (120, 120, 140))
         self._screen.blit(hint, (20, self._screen.get_height() - 30))
         pygame.display.flip()

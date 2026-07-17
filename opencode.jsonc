@@ -1,8 +1,0 @@
-{
-  "lint": {
-    "command": "python -m pytest tests/ -q"
-  },
-  "typecheck": {
-    "command": "python -c \"from game.config import Config; from game.dino import Dino; from game.obstacle import Cactus; from game.brain import Brain; from ga.engine import create_population; from ga.evolution import Evolution; from nn.network import NeuralNetwork; from replay.logger import GameplayLog; from dashboard.charts import compute_genome_stats; print('All imports OK')\""
-  }
-}
