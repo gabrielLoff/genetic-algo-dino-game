@@ -94,7 +94,12 @@ def record_run_to_log(genome, generation, brain_index, config, seed):
 
     def on_frame(state, frame, t):
         nonlocal frame_idx
-        obstacles_data = [{"x": c.x, "size": c.size} for c in state.obstacles]
+        obstacles_data = []
+        for c in state.obstacles:
+            if hasattr(c, 'size'):
+                obstacles_data.append({"x": c.x, "size": c.size})
+            else:
+                obstacles_data.append({"x": c.x, "height_level": c.height_level})
         log.add(FrameRecord(
             frame=frame_idx, dino_y=state.dino_y, obstacles=obstacles_data,
             brain_output=state.brain_output, game_speed=state.speed,

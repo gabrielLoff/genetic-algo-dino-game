@@ -86,7 +86,7 @@ def _replay_best(config, log_store):
     pygame.quit()
 
 
-def _run_evolution(config, log_store):
+def _run_evolution(config, log_store, interactive=True):
     evolution = Evolution(config)
     dashboard = DashboardWindow()
 
@@ -108,6 +108,9 @@ def _run_evolution(config, log_store):
         last = evolution.history[-1]
         print(f"Gen {last['generation']:3d} | best={last['best_fitness']:8.1f} "
               f"avg={last['avg_fitness']:8.1f}")
+
+        if not interactive:
+            continue
 
         remaining -= 1
         if remaining > 0 and not evolution.is_finished():
@@ -164,7 +167,7 @@ def _compare_evolutions(preset_a, preset_b):
     print(f"    pop={config_a.population_size} mut={config_a.mutation_rate} "
           f"fitness={config_a.fitness_function} gens={config_a.max_generations}")
     start_a = time.perf_counter()
-    evo_a = _run_evolution(config_a, log_store_a)
+    evo_a = _run_evolution(config_a, log_store_a, interactive=False)
     elapsed_a = time.perf_counter() - start_a
     log_store_a.cleanup()
 
@@ -176,7 +179,7 @@ def _compare_evolutions(preset_a, preset_b):
     print(f"    pop={config_b.population_size} mut={config_b.mutation_rate} "
           f"fitness={config_b.fitness_function} gens={config_b.max_generations}")
     start_b = time.perf_counter()
-    evo_b = _run_evolution(config_b, log_store_b)
+    evo_b = _run_evolution(config_b, log_store_b, interactive=False)
     elapsed_b = time.perf_counter() - start_b
 
     best_a = evo_a.best_fitness
