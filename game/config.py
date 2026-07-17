@@ -15,6 +15,8 @@ PARAM_SPECS = [
      "Fraction of top brains kept unchanged each generation"),
     ("fitness_function", "survival_clearance", None, None, "Genetic Algorithm", "Fitness Function", str,
      "Strategy for scoring brains: survival, clearance, near-miss, efficiency"),
+    ("crossover_operator", "uniform", None, None, "Genetic Algorithm", "Crossover Operator", str,
+     "How parent genomes combine: uniform, single_point, two_point"),
     ("max_generations", 50, 1, 500, "Genetic Algorithm", "Max Generations", int,
      "Stop evolution after this many generations"),
     ("plateau_generations", 10, 1, 100, "Genetic Algorithm", "Plateau Gens", int,
@@ -79,6 +81,7 @@ class Config:
     tournament_size_percent: float = 0.1
     elitism_rate: float = 0.05
     fitness_function: str = "survival_clearance"
+    crossover_operator: str = "uniform"
     game_speed_initial: float = 400
     game_speed_max: float = 1000
     game_speed_increment: float = 2

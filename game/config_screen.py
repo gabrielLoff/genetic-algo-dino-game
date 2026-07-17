@@ -47,6 +47,7 @@ class ConfigMenu:
 
 _FITNESS_OPTIONS = ["survival_only", "survival_clearance", "near_miss", "efficiency"]
 _GHOST_OPTIONS = ["off", "worst", "random", "top"]
+_CROSSOVER_OPTIONS = ["uniform", "single_point", "two_point"]
 
 _VIEW_TOP = 75
 
@@ -300,6 +301,8 @@ class ConfigScreen:
     def _adjust_string_param(self, key, default, direction):
         if key == "ghost_mode":
             options = _GHOST_OPTIONS
+        elif key == "crossover_operator":
+            options = _CROSSOVER_OPTIONS
         else:
             options = _FITNESS_OPTIONS
         current = getattr(self._config, key)

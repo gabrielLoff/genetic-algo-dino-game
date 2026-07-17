@@ -3,6 +3,8 @@ from ga.engine import (
     create_population,
     tournament_select,
     uniform_crossover,
+    single_point_crossover,
+    two_point_crossover,
     gaussian_mutation,
     elitism_survivors,
 )
@@ -66,6 +68,61 @@ def test_gaussian_mutation_respects_rate():
     mutated = gaussian_mutation(original, mutation_rate=0.2, mutation_strength=1.0)
     changed = np.sum(original != mutated)
     assert 150 <= changed <= 300
+
+
+def test_single_point_crossover_produces_child_length_match():
+    parent_a = np.array([1.0] * 37)
+    parent_b = np.array([9.0] * 37)
+    np.random.seed(0)
+    child = single_point_crossover(parent_a, parent_b)
+    assert len(child) == 37
+    assert all(v in (1.0, 9.0) for v in child)
+
+
+def test_single_point_crossover_is_contiguous_split():
+    np.random.seed(0)
+    parent_a = np.ones(37)
+    parent_b = np.zeros(37)
+    child = single_point_crossover(parent_a, parent_b)
+    assert 0 < np.sum(child) < 37
+    first_zero = np.where(child == 0)[0][0]
+    assert np.all(child[first_zero:] == 0)
+
+
+def test_single_point_crossover_split_in_valid_range():
+    parent_a = np.arange(10, dtype=float)
+    parent_b = np.arange(10, dtype=float) + 100
+    for _ in range(100):
+        child = single_point_crossover(parent_a, parent_b)
+        changed_positions = np.where(child != parent_a)[0]
+        assert len(changed_positions) > 0
+        assert len(changed_positions) < 10
+
+
+def test_two_point_crossover_produces_child_length_match():
+    parent_a = np.array([1.0] * 37)
+    parent_b = np.array([9.0] * 37)
+    np.random.seed(0)
+    child = two_point_crossover(parent_a, parent_b)
+    assert len(child) == 37
+    assert all(v in (1.0, 9.0) for v in child)
+
+
+def test_two_point_crossover_mixes_parents():
+    np.random.seed(0)
+    parent_a = np.ones(37)
+    parent_b = np.zeros(37)
+    child = two_point_crossover(parent_a, parent_b)
+    assert 0 < np.sum(child) < 37
+
+
+def test_two_point_crossover_has_two_boundaries():
+    parent_a = np.full(50, -1.0)
+    parent_b = np.full(50, 2.0)
+    for _ in range(50):
+        child = two_point_crossover(parent_a, parent_b)
+        change_points = np.where(np.diff(child) != 0)[0]
+        assert len(change_points) == 2
 
 
 def test_elitism_survivors_returns_top_indices():

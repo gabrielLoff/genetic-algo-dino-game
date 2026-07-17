@@ -4,9 +4,17 @@ from ga.engine import (
     create_population,
     tournament_select,
     uniform_crossover,
+    single_point_crossover,
+    two_point_crossover,
     gaussian_mutation,
     elitism_survivors,
 )
+
+_CROSSOVER_MAP = {
+    "uniform": uniform_crossover,
+    "single_point": single_point_crossover,
+    "two_point": two_point_crossover,
+}
 
 
 def derive_seed(master_seed, generation):
@@ -108,7 +116,8 @@ class Evolution:
         while len(next_pop) < pop_size:
             p1 = tournament_select(self._fitnesses, k=tournament_k)
             p2 = tournament_select(self._fitnesses, k=tournament_k)
-            child = uniform_crossover(self.population[p1], self.population[p2])
+            crossover_fn = _CROSSOVER_MAP.get(self._config.crossover_operator, uniform_crossover)
+            child = crossover_fn(self.population[p1], self.population[p2])
             child = gaussian_mutation(
                 child,
                 mutation_rate=self._config.mutation_rate,

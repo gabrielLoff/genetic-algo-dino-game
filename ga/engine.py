@@ -24,6 +24,28 @@ def uniform_crossover(parent_a, parent_b):
     return child
 
 
+def single_point_crossover(parent_a, parent_b):
+    n = len(parent_a)
+    if n < 2:
+        return parent_a.copy()
+    point = np.random.randint(1, n)
+    child = np.concatenate([parent_a[:point], parent_b[point:]])
+    return child
+
+
+def two_point_crossover(parent_a, parent_b):
+    n = len(parent_a)
+    if n < 3:
+        return single_point_crossover(parent_a, parent_b)
+    points = sorted(np.random.choice(range(1, n), size=2, replace=False))
+    p1, p2 = points
+    if np.random.random() < 0.5:
+        child = np.concatenate([parent_a[:p1], parent_b[p1:p2], parent_a[p2:]])
+    else:
+        child = np.concatenate([parent_b[:p1], parent_a[p1:p2], parent_b[p2:]])
+    return child
+
+
 def gaussian_mutation(genome, mutation_rate, mutation_strength):
     mutated = np.array(genome, dtype=np.float64, copy=True)
     mask = np.random.random(len(mutated)) < mutation_rate
