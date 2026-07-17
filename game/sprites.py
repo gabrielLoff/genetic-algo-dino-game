@@ -27,6 +27,12 @@ def get_sprite(name, width, height, fallback_color=None):
         _SPRITE_CACHE[key] = image
         return image
 
+    from game.pixel_sprites import generate_pixel_sprite
+    pixel = generate_pixel_sprite(name, width, height)
+    if pixel is not None:
+        _SPRITE_CACHE[key] = pixel
+        return pixel
+
     if fallback_color is not None:
         surf = pygame.Surface((width, height), pygame.SRCALPHA)
         surf.fill(fallback_color)

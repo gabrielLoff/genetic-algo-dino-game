@@ -1,5 +1,6 @@
 import pygame
-from game.sprites import get_sprite, render_dino, render_cactus, render_ground, render_background
+from game.sprites import get_sprite, render_dino, render_cactus, render_pterodactyl, render_ground, render_background
+from game.pixel_sprites import generate_pixel_sprite
 
 
 def test_get_sprite_falls_back_to_colored_rect():
@@ -27,3 +28,37 @@ def test_render_functions_do_not_crash_with_missing_sprites():
     render_dino(screen, 80, 320)
     render_cactus(screen, 500, 320, "small")
     render_cactus(screen, 600, 320, "tall")
+    render_pterodactyl(screen, 700, 320, "low")
+    render_pterodactyl(screen, 750, 320, "high")
+
+
+def test_pixel_sprite_generates_dino():
+    surf = generate_pixel_sprite("dino.png", 40, 50)
+    assert surf is not None
+    assert surf.get_width() == 40
+    assert surf.get_height() == 50
+
+
+def test_pixel_sprite_generates_cactus():
+    surf = generate_pixel_sprite("cactus_small.png", 20, 40)
+    assert surf is not None
+    assert surf.get_width() == 20
+    assert surf.get_height() == 40
+
+
+def test_pixel_sprite_generates_pterodactyl():
+    surf = generate_pixel_sprite("pterodactyl.png", 35, 28)
+    assert surf is not None
+    assert surf.get_width() == 35
+    assert surf.get_height() == 28
+
+
+def test_pixel_sprite_generates_ground():
+    surf = generate_pixel_sprite("ground.png", 800, 80)
+    assert surf is not None
+    assert surf.get_width() == 800
+    assert surf.get_height() == 80
+
+
+def test_pixel_sprite_returns_none_for_unknown():
+    assert generate_pixel_sprite("unknown.png", 10, 10) is None
