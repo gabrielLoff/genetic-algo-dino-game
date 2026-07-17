@@ -1,6 +1,19 @@
 {
   "presets": [
     {
+      "name": "Tutorial",
+      "description": "Quick demo: runs in 30 seconds. Best for first-time presenters.",
+      "params": {
+        "population_size": 20,
+        "max_generations": 5,
+        "hidden_layer_size": 4,
+        "game_speed_initial": 600,
+        "time_cap_seconds": 5,
+        "fitness_function": "survival_clearance",
+        "master_seed": 42
+      }
+    },
+    {
       "name": "Default",
       "description": "Baseline configuration — reloads from config.json or hardcoded defaults",
       "params": {}

@@ -86,6 +86,99 @@ def _replay_best(config, log_store):
     pygame.quit()
 
 
+def _run_evolution(config, log_store):
+    evolution = Evolution(config)
+    dashboard = DashboardWindow()
+
+    print(f"Gen {evolution.history[-1]['generation']:3d} | "
+          f"best={evolution.history[-1]['best_fitness']:8.1f} "
+          f"avg={evolution.history[-1]['avg_fitness']:8.1f}")
+    dashboard.update(evolution)
+
+    while not evolution.is_finished():
+        evolution.step()
+        dashboard.update(evolution)
+
+        if evolution.best_genome is not None:
+            _record_best(evolution, config, log_store)
+            _record_ghosts(evolution, config, log_store)
+
+        last = evolution.history[-1]
+        print(f"Gen {last['generation']:3d} | best={last['best_fitness']:8.1f} "
+              f"avg={last['avg_fitness']:8.1f}")
+
+    reason = evolution.end_condition
+
+    if reason == Evolution.END_PLATEAU:
+        print(f"Evolution finished after {evolution.generation} generations "
+              f"(plateau since gen {evolution.plateau_started_gen})")
+    elif reason == Evolution.END_MAX_GENS:
+        print(f"Evolution finished after {evolution.generation} generations "
+              f"(reached max_generations)")
+    elif reason == Evolution.END_QUIT:
+        print(f"Evolution stopped by user after {evolution.generation} generations")
+    else:
+        print(f"Evolution finished after {evolution.generation} generations")
+
+    dashboard.close()
+    return evolution
+
+
+def _compare_evolutions(preset_a, preset_b):
+    from game.presets import apply_preset
+
+    print("\n" + "=" * 70)
+    print("COMPARISON MODE")
+    print("=" * 70)
+
+    config_a = Config()
+    apply_preset(config_a, preset_a)
+    log_store_a = LogStore()
+    print(f"\n--- Running Preset A: {preset_a['name']} ---")
+    print(f"    {preset_a['description']}")
+    print(f"    pop={config_a.population_size} mut={config_a.mutation_rate} "
+          f"fitness={config_a.fitness_function} gens={config_a.max_generations}")
+    start_a = time.perf_counter()
+    evo_a = _run_evolution(config_a, log_store_a)
+    elapsed_a = time.perf_counter() - start_a
+    log_store_a.cleanup()
+
+    config_b = Config()
+    apply_preset(config_b, preset_b)
+    log_store_b = LogStore()
+    print(f"\n--- Running Preset B: {preset_b['name']} ---")
+    print(f"    {preset_b['description']}")
+    print(f"    pop={config_b.population_size} mut={config_b.mutation_rate} "
+          f"fitness={config_b.fitness_function} gens={config_b.max_generations}")
+    start_b = time.perf_counter()
+    evo_b = _run_evolution(config_b, log_store_b)
+    elapsed_b = time.perf_counter() - start_b
+
+    best_a = evo_a.best_fitness
+    best_b = evo_b.best_fitness
+    gens_a = evo_a.generation
+    gens_b = evo_b.generation
+    end_a = evo_a.end_condition
+    end_b = evo_b.end_condition
+
+    winner = "A" if best_a > best_b else "B" if best_b > best_a else "tie"
+
+    print("\n" + "=" * 60)
+    print("COMPARISON RESULTS")
+    print("=" * 60)
+    print(f"  {'':20s} {'Preset A':>20s} {'Preset B':>20s}")
+    print(f"  {'':20s} {'-------':>20s} {'-------':>20s}")
+    print(f"  {'Name':20s} {preset_a['name']:>20s} {preset_b['name']:>20s}")
+    print(f"  {'Best Fitness':20s} {best_a:>20.1f} {best_b:>20.1f}")
+    print(f"  {'Generations':20s} {gens_a:>20d} {gens_b:>20d}")
+    print(f"  {'End Condition':20s} {end_a:>20s} {end_b:>20s}")
+    print(f"  {'Duration (s)':20s} {elapsed_a:>20.1f} {elapsed_b:>20.1f}")
+    print(f"  {'Winner':20s} {winner:>20s}")
+    print("=" * 60)
+
+    return evo_b, log_store_b
+
+
 def main():
     config = load_config("config.json")
     pygame.init()
@@ -102,74 +195,21 @@ def main():
           f"max_generations={config.max_generations}, "
           f"fitness={config.fitness_function}")
 
-    evolution = Evolution(config)
-    dashboard = DashboardWindow()
     log_store = LogStore()
 
-    print(f"Gen {evolution.history[-1]['generation']:3d} | "
-          f"best={evolution.history[-1]['best_fitness']:8.1f} "
-          f"avg={evolution.history[-1]['avg_fitness']:8.1f}")
-    dashboard.update(evolution)
-
-    remaining = 0
-    start = time.perf_counter()
-
-    while not evolution.is_finished():
-        evolution.step()
-        dashboard.update(evolution)
-
-        if evolution.best_genome is not None:
-            _record_best(evolution, config, log_store)
-            _record_ghosts(evolution, config, log_store)
-
-        last = evolution.history[-1]
-        print(f"Gen {last['generation']:3d} | best={last['best_fitness']:8.1f} "
-              f"avg={last['avg_fitness']:8.1f}")
-
-        remaining -= 1
-        if remaining > 0 and not evolution.is_finished():
-            continue
-
-        print("[Enter=next gen | N=run N more | R=replay best | Q=quit]")
-        while True:
-            cmd = input("> ").strip().lower()
-            if cmd == "":
-                remaining = 0
-                break
-            elif cmd == "q":
-                remaining = 0
-                evolution.stop(Evolution.END_QUIT)
-                break
-            elif cmd == "r":
-                _replay_best(config, log_store)
-                print("[Enter=next gen | N=run N more | R=replay best | Q=quit]")
-            elif cmd.isdigit():
-                remaining = int(cmd) - 1
-                break
-            else:
-                print("Unknown command. Enter=next, N=run N, R=replay, Q=quit")
-
-    elapsed = time.perf_counter() - start
-    reason = evolution.end_condition
-
-    if reason == Evolution.END_PLATEAU:
-        print(f"\nEvolution finished in {elapsed:.1f}s after {evolution.generation} generations "
-              f"(plateau — best fitness {evolution.best_fitness:.1f} unchanged since gen {evolution.plateau_started_gen})")
-    elif reason == Evolution.END_MAX_GENS:
-        print(f"\nEvolution finished in {elapsed:.1f}s after {evolution.generation} generations "
-              f"(reached max_generations)")
-    elif reason == Evolution.END_QUIT:
-        print(f"\nEvolution stopped by user after {evolution.generation} generations")
+    comparison_presets = config_screen.comparison_presets
+    if comparison_presets:
+        preset_a, preset_b = comparison_presets
+        evolution, log_store = _compare_evolutions(preset_a, preset_b)
     else:
-        print(f"\nEvolution finished in {elapsed:.1f}s after {evolution.generation} generations")
-    print(f"Best fitness: {evolution.best_fitness:.1f}")
+        evolution = _run_evolution(config, log_store)
 
     if evolution.best_genome is not None:
         stats = compute_genome_stats(evolution.best_genome)
+        print(f"Best fitness: {evolution.best_fitness:.1f}")
         print(f"Best genome: min={stats['min']:.4f} max={stats['max']:.4f} "
               f"mean={stats['mean']:.4f} std={stats['std']:.4f}")
 
-    dashboard.close()
     _replay_best(config, log_store)
     log_store.cleanup()
 

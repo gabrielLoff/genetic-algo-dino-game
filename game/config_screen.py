@@ -63,11 +63,15 @@ class ConfigScreen:
         self._build_param_map()
         self._presets = load_presets()
         self._preset_index = 0
+        self._preset_index_b = 0
         self._focus_preset = False
+        self._focus_compare_b = False
+        self._compare_mode = False
         self._confirming_preset = False
         self._scroll_offset = 0
         self._input_mode = False
         self._input_buffer = ""
+        self.comparison_presets = None
 
     def _build_param_map(self):
         self._param_map = []
@@ -171,30 +175,65 @@ class ConfigScreen:
             self._handle_input_key(key)
             return
 
-        if key == pygame.K_TAB:
-            self._focus_preset = not self._focus_preset
-        elif self._focus_preset:
-            if key == pygame.K_RETURN:
-                preset = self._presets[self._preset_index]
-                if preset["name"] != "Default" or len(preset.get("params", {})) > 0:
-                    self._confirming_preset = True
-                else:
-                    apply_preset(self._config, preset)
-                    self._menu = ConfigMenu(self._config)
-                    self._build_param_map()
-                    self._selected_group = 0
-                    self._selected_param = 0
-            elif key == pygame.K_SPACE:
-                self._started = True
-                self._running = False
-            elif key == pygame.K_ESCAPE:
-                self._running = False
-            elif key == pygame.K_LEFT:
-                self._preset_index = (self._preset_index - 1) % len(self._presets)
-            elif key == pygame.K_RIGHT:
-                self._preset_index = (self._preset_index + 1) % len(self._presets)
-            elif key == pygame.K_DOWN:
+        if key == pygame.K_c and not self._confirming_preset:
+            self._compare_mode = not self._compare_mode
+            if self._compare_mode:
+                self._focus_compare_b = False
+                self._focus_preset = True
+            else:
                 self._focus_preset = False
+                self.comparison_presets = None
+            return
+
+        if key == pygame.K_TAB:
+            if self._compare_mode:
+                self._focus_compare_b = not self._focus_compare_b
+            else:
+                self._focus_preset = not self._focus_preset
+        elif self._focus_preset:
+            if self._compare_mode:
+                if key in (pygame.K_RETURN, pygame.K_SPACE):
+                    self._started = True
+                    self._running = False
+                    self.comparison_presets = (
+                        self._presets[self._preset_index],
+                        self._presets[self._preset_index_b],
+                    )
+                elif key == pygame.K_ESCAPE:
+                    self._compare_mode = False
+                    self.comparison_presets = None
+                elif key == pygame.K_LEFT:
+                    if self._focus_compare_b:
+                        self._preset_index_b = (self._preset_index_b - 1) % len(self._presets)
+                    else:
+                        self._preset_index = (self._preset_index - 1) % len(self._presets)
+                elif key == pygame.K_RIGHT:
+                    if self._focus_compare_b:
+                        self._preset_index_b = (self._preset_index_b + 1) % len(self._presets)
+                    else:
+                        self._preset_index = (self._preset_index + 1) % len(self._presets)
+            else:
+                if key == pygame.K_RETURN:
+                    preset = self._presets[self._preset_index]
+                    if preset["name"] != "Default" or len(preset.get("params", {})) > 0:
+                        self._confirming_preset = True
+                    else:
+                        apply_preset(self._config, preset)
+                        self._menu = ConfigMenu(self._config)
+                        self._build_param_map()
+                        self._selected_group = 0
+                        self._selected_param = 0
+                elif key == pygame.K_SPACE:
+                    self._started = True
+                    self._running = False
+                elif key == pygame.K_ESCAPE:
+                    self._running = False
+                elif key == pygame.K_LEFT:
+                    self._preset_index = (self._preset_index - 1) % len(self._presets)
+                elif key == pygame.K_RIGHT:
+                    self._preset_index = (self._preset_index + 1) % len(self._presets)
+                elif key == pygame.K_DOWN:
+                    self._focus_preset = False
         else:
             if key == pygame.K_RETURN:
                 key_name = self._current_key()
@@ -284,6 +323,88 @@ class ConfigScreen:
         title = self._title_font.render("GA Dino Game — Configuration", True, (200, 200, 255))
         self._screen.blit(title, (20, 10))
 
+        if self._compare_mode:
+            self._render_compare_presets()
+        else:
+            self._render_single_preset()
+
+        if self._confirming_preset:
+            box_w = 400
+            box_h = 60
+            box_x = (self._screen.get_width() - box_w) // 2
+            box_y = (self._screen.get_height() - box_h) // 2
+            pygame.draw.rect(self._screen, (50, 50, 60), (box_x, box_y, box_w, box_h))
+            pygame.draw.rect(self._screen, (200, 200, 100), (box_x, box_y, box_w, box_h), 2)
+            preset = self._presets[self._preset_index]
+            msg = self._font.render(
+                f"Load preset '{preset['name']}'?  ENTER=Yes  ESC=No",
+                True, (255, 255, 200))
+            msg_rect = msg.get_rect(center=(self._screen.get_width() // 2, self._screen.get_height() // 2))
+            self._screen.blit(msg, msg_rect)
+            if self._focus_preset:
+                hint = self._font.render("TAB=switch focus  SPACE=Start  ENTER=load preset  ARROWS=cycle presets", True, (120, 120, 140))
+                self._screen.blit(hint, (20, self._screen.get_height() - 30))
+            else:
+                hint = self._font.render("SPACE=Start  ESC=Quit  ENTER=Edit  ARROWS=Navigate  LEFT/RIGHT=Adjust", True, (120, 120, 140))
+                self._screen.blit(hint, (20, self._screen.get_height() - 30))
+            pygame.display.flip()
+            return
+
+        if not self._compare_mode:
+            y = 75
+            group_names = sorted(set(g.name for g in self._menu._groups))
+            current_group_name = self._current_group().name
+
+            for group_name in group_names:
+                color = (255, 255, 100) if group_name == current_group_name else (150, 150, 150)
+                label = self._font.render(group_name.upper(), True, color)
+                self._screen.blit(label, (20, y - self._scroll_offset))
+                y += 24
+
+                if group_name == current_group_name:
+                    group = self._current_group()
+                    selected_desc = ""
+                    for pi, (key, (default, min_val, max_val, label, desc)) in enumerate(group.params.items()):
+                        param_idx = next(i for i, (gi, pii, k) in enumerate(self._param_map)
+                                         if gi == self._selected_group and pii == pi)
+                        selected = param_idx == self._selected_param and not self._focus_preset
+                        if selected:
+                            selected_desc = desc
+
+                        prefix = ">" if selected else " "
+                        value = getattr(self._config, key)
+                        if selected and self._input_mode:
+                            value_str = self._input_buffer + "_"
+                        elif value is None:
+                            value_str = "Random"
+                        elif isinstance(value, str):
+                            value_str = value
+                        elif isinstance(value, float):
+                            value_str = f"{value:.3f}"
+                        else:
+                            value_str = str(value)
+
+                        color = (255, 255, 255) if selected else (180, 180, 200)
+                        text = self._font.render(f"{prefix} {label:25s} {value_str:>12s}", True, color)
+                        self._screen.blit(text, (30, y - self._scroll_offset))
+                        y += 20
+
+            if selected_desc and not self._focus_preset:
+                desc_text = self._font.render(selected_desc, True, (100, 180, 255))
+                self._screen.blit(desc_text, (20, self._screen.get_height() - 50))
+
+        if self._compare_mode:
+            hint = self._font.render(
+                "C=toggle compare  TAB=switch A/B  SPACE=Start  ESC=quit  ARROWS=cycle preset",
+                True, (120, 120, 140))
+        elif self._focus_preset:
+            hint = self._font.render("TAB=switch focus  SPACE=Start  ENTER=load preset  ARROWS=cycle presets  C=compare", True, (120, 120, 140))
+        else:
+            hint = self._font.render("SPACE=Start  ESC=Quit  ENTER=Edit  ARROWS=Navigate  LEFT/RIGHT=Adjust  C=compare", True, (120, 120, 140))
+        self._screen.blit(hint, (20, self._screen.get_height() - 30))
+        pygame.display.flip()
+
+    def _render_single_preset(self):
         preset = self._presets[self._preset_index]
         preset_color = (100, 255, 100) if self._focus_preset else (150, 150, 150)
         preset_label = self._font.render("Preset:", True, preset_color)
@@ -301,72 +422,31 @@ class ConfigScreen:
             desc_text = self._font.render(desc_line, True, (100, 180, 255))
             self._screen.blit(desc_text, (20, self._screen.get_height() - 50))
 
-        if self._confirming_preset:
-            box_w = 400
-            box_h = 60
-            box_x = (self._screen.get_width() - box_w) // 2
-            box_y = (self._screen.get_height() - box_h) // 2
-            pygame.draw.rect(self._screen, (50, 50, 60), (box_x, box_y, box_w, box_h))
-            pygame.draw.rect(self._screen, (200, 200, 100), (box_x, box_y, box_w, box_h), 2)
-            msg = self._font.render(
-                f"Load preset '{preset['name']}'?  ENTER=Yes  ESC=No",
-                True, (255, 255, 200))
-            msg_rect = msg.get_rect(center=(self._screen.get_width() // 2, self._screen.get_height() // 2))
-            self._screen.blit(msg, msg_rect)
-            if self._focus_preset:
-                hint = self._font.render("TAB=switch focus  SPACE=Start  ENTER=load preset  ARROWS=cycle presets", True, (120, 120, 140))
-                self._screen.blit(hint, (20, self._screen.get_height() - 30))
-            else:
-                hint = self._font.render("TAB=switch focus  SPACE=Start  ENTER=load preset  ARROWS=adjust params", True, (120, 120, 140))
-                self._screen.blit(hint, (20, self._screen.get_height() - 30))
-            pygame.display.flip()
-            return
+    def _render_compare_presets(self):
+        preset_a = self._presets[self._preset_index]
+        preset_b = self._presets[self._preset_index_b]
+        focus_a = not self._focus_compare_b
 
-        y = 75
-        group_names = sorted(set(g.name for g in self._menu._groups))
-        current_group_name = self._current_group().name
+        preset_label_a = self._font.render("Preset A:", True, (100, 255, 100))
+        self._screen.blit(preset_label_a, (20, 40))
 
-        for group_name in group_names:
-            color = (255, 255, 100) if group_name == current_group_name else (150, 150, 150)
-            label = self._font.render(group_name.upper(), True, color)
-            self._screen.blit(label, (20, y - self._scroll_offset))
-            y += 24
+        brackets_a = "<" if focus_a else " "
+        close_a = ">" if focus_a else " "
+        preset_name_a = f"{brackets_a} {preset_a['name']:30s} {close_a}"
+        name_color_a = (255, 255, 150) if focus_a else (180, 180, 200)
+        name_text_a = self._font.render(preset_name_a, True, name_color_a)
+        self._screen.blit(name_text_a, (130, 40))
 
-            if group_name == current_group_name:
-                group = self._current_group()
-                selected_desc = ""
-                for pi, (key, (default, min_val, max_val, label, desc)) in enumerate(group.params.items()):
-                    param_idx = next(i for i, (gi, pii, k) in enumerate(self._param_map)
-                                     if gi == self._selected_group and pii == pi)
-                    selected = param_idx == self._selected_param and not self._focus_preset
-                    if selected:
-                        selected_desc = desc
+        preset_label_b = self._font.render("Preset B:", True, (100, 255, 100))
+        self._screen.blit(preset_label_b, (20, 62))
 
-                    prefix = ">" if selected else " "
-                    value = getattr(self._config, key)
-                    if selected and self._input_mode:
-                        value_str = self._input_buffer + "_"
-                    elif value is None:
-                        value_str = "Random"
-                    elif isinstance(value, str):
-                        value_str = value
-                    elif isinstance(value, float):
-                        value_str = f"{value:.3f}"
-                    else:
-                        value_str = str(value)
+        brackets_b = "<" if not focus_a else " "
+        close_b = ">" if not focus_a else " "
+        preset_name_b = f"{brackets_b} {preset_b['name']:30s} {close_b}"
+        name_color_b = (255, 255, 150) if not focus_a else (180, 180, 200)
+        name_text_b = self._font.render(preset_name_b, True, name_color_b)
+        self._screen.blit(name_text_b, (130, 62))
 
-                    color = (255, 255, 255) if selected else (180, 180, 200)
-                    text = self._font.render(f"{prefix} {label:25s} {value_str:>12s}", True, color)
-                    self._screen.blit(text, (30, y - self._scroll_offset))
-                    y += 20
-
-        if selected_desc and not self._focus_preset:
-            desc_text = self._font.render(selected_desc, True, (100, 180, 255))
-            self._screen.blit(desc_text, (20, self._screen.get_height() - 50))
-
-        if self._focus_preset:
-            hint = self._font.render("TAB=switch focus  SPACE=Start  ENTER=load preset  ARROWS=cycle presets", True, (120, 120, 140))
-        else:
-            hint = self._font.render("SPACE=Start  ESC=Quit  ENTER=Edit  ARROWS=Navigate  LEFT/RIGHT=Adjust", True, (120, 120, 140))
-        self._screen.blit(hint, (20, self._screen.get_height() - 30))
-        pygame.display.flip()
+        focus_preset = preset_a if focus_a else preset_b
+        desc_text = self._font.render(focus_preset["description"], True, (100, 180, 255))
+        self._screen.blit(desc_text, (20, self._screen.get_height() - 50))
