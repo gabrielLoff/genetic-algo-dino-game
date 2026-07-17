@@ -58,3 +58,17 @@ Recurring bugs and patterns to watch for:
 - **Hitbox coordinate systems** — the Dino uses bottom-aligned y (feet on ground). When passing to `inset_hitbox()`, compute `top = y - height` first. Cactus hitboxes are top-aligned. Mixing coordinate systems silently breaks collision.
 - **Stale references after refactors** — when renaming function parameters, search the entire codebase for old variable names. `grep`-and-replace in a single file can miss callers in other modules.
 - **Config parameter source-of-truth** — all parameter metadata (default, min, max, label, group) lives in `PARAM_SPECS` in `game/config.py`. Never duplicate defaults across files. The `ConfigMenu` derives its groups from the same spec.
+- **Config screen None min/max** — parameters with `min_val=None, max_val=None` crash the step calculation. Always provide bounds in PARAM_SPECS or handle None gracefully in `_adjust_param`.
+- **Bool params are ints** — `isinstance(False, int)` returns True in Python. Boolean config params (like `fullscreen`) hit the integer-adjustment code path. Always give booleans explicit min/max bounds.
+- **Config screen focus modes** — the config screen has two focus modes: preset selector and parameter list. Tab toggles between them. Key bindings (Enter, Left/Right) do different things in each mode. The hint bar at the bottom explains current bindings.
+
+### Workflow conventions
+
+- **Trivial fixes:** For one-line changes (rename, fix typo, stale reference), flag as trivial, ask for skip-ok, then implement directly. No seam proposal needed.
+- **Code review cadence:** Run `/code-review` after each frontier batch of implementation — catches cross-ticket regressions.
+- **QA → Triage → Implement loop:** When bugs are found during QA, triage them to `ready-for-agent` before implementing. Don't fix-and-close in one step.
+
+### Available skills
+
+- `/validate` — run test suite + integration tests + heuristic checks for pathological GA behavior. Use `--presets "Name"` to smoke specific presets.
+- `/suggest-enhancements` — creative brainstorming of new features based on codebase exploration and issue history.
