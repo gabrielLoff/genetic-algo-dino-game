@@ -48,6 +48,7 @@ class ConfigMenu:
 _FITNESS_OPTIONS = ["survival_only", "survival_clearance", "near_miss", "efficiency"]
 _GHOST_OPTIONS = ["off", "worst", "random", "top"]
 _CROSSOVER_OPTIONS = ["uniform", "single_point", "two_point"]
+_MUTATION_ADAPTATION_OPTIONS = ["none", "linear_decay", "diversity_driven"]
 
 _VIEW_TOP = 75
 
@@ -303,6 +304,8 @@ class ConfigScreen:
             options = _GHOST_OPTIONS
         elif key == "crossover_operator":
             options = _CROSSOVER_OPTIONS
+        elif key == "mutation_adaptation":
+            options = _MUTATION_ADAPTATION_OPTIONS
         else:
             options = _FITNESS_OPTIONS
         current = getattr(self._config, key)

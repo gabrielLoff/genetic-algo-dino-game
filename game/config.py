@@ -9,6 +9,10 @@ PARAM_SPECS = [
      "Probability each gene is randomly altered"),
     ("mutation_strength", 0.2, 0.01, 2.0, "Genetic Algorithm", "Mutation Strength", float,
      "Magnitude of random changes to genes"),
+    ("mutation_adaptation", "none", None, None, "Genetic Algorithm", "Mutation Adaptation", str,
+     "How mutation strength adapts: none, linear_decay, diversity_driven"),
+    ("mutation_strength_floor", 0.01, 0.0, 0.5, "Genetic Algorithm", "Mutation Floor", float,
+     "Minimum effective mutation strength when adaptation is active"),
     ("tournament_size_percent", 0.1, 0.01, 1.0, "Genetic Algorithm", "Tournament Size %", float,
      "Fraction of population competing to be a parent"),
     ("elitism_rate", 0.05, 0.0, 0.5, "Genetic Algorithm", "Elitism Rate", float,
@@ -81,6 +85,8 @@ class Config:
     num_hidden_layers: int = 1
     mutation_rate: float = 0.1
     mutation_strength: float = 0.2
+    mutation_adaptation: str = "none"
+    mutation_strength_floor: float = 0.01
     tournament_size_percent: float = 0.1
     elitism_rate: float = 0.05
     fitness_function: str = "survival_clearance"

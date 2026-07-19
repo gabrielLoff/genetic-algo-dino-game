@@ -197,3 +197,57 @@ class TestDiversity:
         for record in evolution.history:
             assert "diversity" in record
             assert record["diversity"] >= 0.0
+
+
+class TestMutationAdaptation:
+    def test_effective_strength_none_returns_base(self):
+        config = _make_config()
+        config.mutation_adaptation = "none"
+        config.mutation_strength = 0.5
+        evolution = Evolution(config)
+        strength = evolution._effective_mutation_strength(diversity=0.1)
+        assert strength == 0.5
+
+    def test_effective_strength_linear_decay_decreases_over_generations(self):
+        config = _make_config()
+        config.mutation_adaptation = "linear_decay"
+        config.mutation_strength = 0.5
+        config.mutation_strength_floor = 0.01
+        config.max_generations = 10
+        evolution = Evolution(config)
+        strength_g0 = evolution._effective_mutation_strength(diversity=0.1)
+        evolution.generation = 5
+        strength_g5 = evolution._effective_mutation_strength(diversity=0.1)
+        assert strength_g5 < strength_g0
+
+    def test_effective_strength_linear_decay_respects_floor(self):
+        config = _make_config()
+        config.mutation_adaptation = "linear_decay"
+        config.mutation_strength = 0.5
+        config.mutation_strength_floor = 0.2
+        config.max_generations = 10
+        evolution = Evolution(config)
+        evolution.generation = 10
+        strength = evolution._effective_mutation_strength(diversity=0.1)
+        assert strength >= 0.2
+
+    def test_effective_strength_diversity_driven_scales(self):
+        config = _make_config()
+        config.mutation_adaptation = "diversity_driven"
+        config.mutation_strength = 0.5
+        config.diversity_warning_threshold = 0.1
+        config.mutation_strength_floor = 0.01
+        evolution = Evolution(config)
+        high = evolution._effective_mutation_strength(diversity=0.2)
+        low = evolution._effective_mutation_strength(diversity=0.03)
+        assert low < high
+
+    def test_effective_strength_diversity_driven_respects_floor(self):
+        config = _make_config()
+        config.mutation_adaptation = "diversity_driven"
+        config.mutation_strength = 0.5
+        config.diversity_warning_threshold = 0.1
+        config.mutation_strength_floor = 0.1
+        evolution = Evolution(config)
+        strength = evolution._effective_mutation_strength(diversity=0.001)
+        assert strength >= 0.1

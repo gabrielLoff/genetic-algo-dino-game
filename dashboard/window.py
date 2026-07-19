@@ -78,6 +78,9 @@ class DashboardWindow:
                 lines.append("")
                 lines.append("Low diversity -")
                 lines.append("population converging")
+        if evolution._config.mutation_adaptation != "none":
+            eff = evolution.effective_mutation_strength
+            lines.append(f"Mutation strength: {eff:.4f}")
         if evolution.end_condition != Evolution.END_RUNNING:
             label = _END_LABELS.get(evolution.end_condition, "Finished")
             lines += ["", f"Status: {label}"]

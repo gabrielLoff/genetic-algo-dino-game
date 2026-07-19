@@ -104,6 +104,30 @@ class Evolution:
         })
         return fitnesses
 
+    def _effective_mutation_strength(self, diversity=None):
+        if self._config.mutation_adaptation == "none":
+            return self._config.mutation_strength
+
+        if diversity is None:
+            diversity = 0.0
+            if self.history:
+                diversity = self.history[-1].get("diversity", 0.0)
+
+        if self._config.mutation_adaptation == "linear_decay":
+            progress = self.generation / max(self._config.max_generations, 1)
+            return max(
+                self._config.mutation_strength * (1.0 - progress),
+                self._config.mutation_strength_floor,
+            )
+        elif self._config.mutation_adaptation == "diversity_driven":
+            threshold = max(self._config.diversity_warning_threshold, 1e-6)
+            return max(
+                self._config.mutation_strength * (diversity / threshold),
+                self._config.mutation_strength_floor,
+            )
+
+        return self._config.mutation_strength
+
     def step(self):
         elite_indices = elitism_survivors(
             self._fitnesses,
@@ -119,10 +143,11 @@ class Evolution:
             p2 = tournament_select(self._fitnesses, k=tournament_k)
             crossover_fn = _CROSSOVER_MAP.get(self._config.crossover_operator, uniform_crossover)
             child = crossover_fn(self.population[p1], self.population[p2])
+            effective_strength = self._effective_mutation_strength()
             child = gaussian_mutation(
                 child,
                 mutation_rate=self._config.mutation_rate,
-                mutation_strength=self._config.mutation_strength,
+                mutation_strength=effective_strength,
             )
             next_pop.append(child)
 
@@ -157,3 +182,7 @@ class Evolution:
     @property
     def best_genome(self):
         return self._best_genome.copy() if self._best_genome is not None else None
+
+    @property
+    def effective_mutation_strength(self):
+        return self._effective_mutation_strength()
