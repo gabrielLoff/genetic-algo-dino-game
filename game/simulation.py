@@ -5,13 +5,15 @@ from game.brain import Brain, JumpController
 
 
 class FrameState:
-    def __init__(self, dino, game_speed, obs_manager, brain_output, dt, jumped):
+    def __init__(self, dino, game_speed, obs_manager, brain_output, dt, jumped, frame, time_alive):
         self.dino_y = dino.y
         self.dino_hitbox = dino.hitbox()
         self.speed = game_speed.current
         self.obstacles = obs_manager.obstacles
         self.brain_output = brain_output
         self.jumped = jumped
+        self.frame = frame
+        self.time_alive = time_alive
         self.dino = dino
         self.obs_manager = obs_manager
 
@@ -22,7 +24,8 @@ class GameSimulation:
         self._genome = genome
         self._seed = seed
 
-    def run(self, per_frame_callback):
+    def run(self, per_frame_callback=None, observers=None):
+        observers = list(observers or [])
         seed = self._config.obstacle_seed if self._config.obstacle_seed is not None else self._seed
         np.random.seed(seed)
         config = self._config
@@ -71,11 +74,15 @@ class GameSimulation:
             dino.update(dt, config.dino_gravity)
             jump_ctrl.update()
 
-            state = FrameState(dino, game_speed, obs_manager, brain_output, dt, jumped)
-            should_continue = per_frame_callback(state, frame, time_alive)
+            state = FrameState(dino, game_speed, obs_manager, brain_output, dt, jumped, frame, time_alive)
 
-            if not should_continue:
-                break
+            for observer in observers:
+                if observer(state) is False:
+                    return frame, time_alive
+
+            if per_frame_callback is not None:
+                if per_frame_callback(state, frame, time_alive) is False:
+                    return frame, time_alive
 
             time_alive += dt
             frame += 1
