@@ -54,10 +54,10 @@ This validates the GA produces selection pressure (5 gens, 2 fitness functions).
 
 Recurring bugs and patterns to watch for:
 
-- **Config screen parameter steps** — step size must be range-based (not value-based) and symmetric. Integer steps need a minimum of 1 to avoid being truncated by `int()`.
+- **Config screen parameter steps** — see [`docs/configs/genetic-algorithm.md`](docs/configs/genetic-algorithm.md).
 - **Hitbox coordinate systems** — the Dino uses bottom-aligned y (feet on ground). When passing to `inset_hitbox()`, compute `top = y - height` first. Cactus hitboxes are top-aligned. Mixing coordinate systems silently breaks collision.
 - **Stale references after refactors** — when renaming function parameters, search the entire codebase for old variable names. `grep`-and-replace in a single file can miss callers in other modules.
-- **Config parameter source-of-truth** — all parameter metadata (default, min, max, label, group) lives in `PARAM_SPECS` in `game/config.py`. Never duplicate defaults across files. The `ConfigMenu` derives its groups from the same spec.
+- **Config parameter source-of-truth** — see [`docs/configs/`](docs/configs/) (applies to all three group docs).
 - **Config screen None min/max** — parameters with `min_val=None, max_val=None` crash the step calculation. Always provide bounds in PARAM_SPECS or handle None gracefully in `_adjust_param`.
 - **Bool params are ints** — `isinstance(False, int)` returns True in Python. Boolean config params (like `fullscreen`) hit the integer-adjustment code path. Always give booleans explicit min/max bounds.
 - **Config screen focus modes** — the config screen has two focus modes: preset selector and parameter list. Tab toggles between them. Key bindings (Enter, Left/Right) do different things in each mode. The hint bar at the bottom explains current bindings.

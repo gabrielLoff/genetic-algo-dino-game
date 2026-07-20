@@ -4,6 +4,10 @@ The parameters that control the GA itself: population, selection, variation, fit
 
 All defaults below come from `PARAM_SPECS` in `game/config.py` — that file is the source of truth for numbers, this file explains the *behavior*.
 
+**Watch out for — config parameter source-of-truth:** all parameter metadata (default, min, max, label, group) lives in `PARAM_SPECS` in `game/config.py`. Never duplicate defaults across files. The `ConfigMenu` derives its groups from the same spec.
+
+**Watch out for — config screen parameter steps:** step size must be range-based (not value-based) and symmetric. Integer steps need a minimum of 1 to avoid being truncated by `int()`. Without this, narrow-range integer parameters (e.g. `num_hidden_layers` 1–3) can become inert to Left/Right keys because the step truncates to 0.
+
 ### `population_size`
 
 **Default:** 100 · **Range:** 10–1000

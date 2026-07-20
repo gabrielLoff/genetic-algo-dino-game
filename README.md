@@ -30,7 +30,11 @@ pytest tests/
 
 ## Configuration
 
-Edit `config.json` to override defaults, or use the in-game config screen on startup.
+Edit `config.json` to override defaults, or use the in-game config screen on startup. For per-parameter documentation — what each setting does to the algorithm and which presets exercise it — see the [`docs/configs/`](docs/configs/) directory:
+
+- [Genetic Algorithm parameters](docs/configs/genetic-algorithm.md) — population, mutation, selection, fitness
+- [Neural Network parameters](docs/configs/neural-network.md) — brain topology (layers and neurons)
+- [Game parameters](docs/configs/game.md) — world speed, obstacles, dino physics, replay
 
 ### Presets
 
