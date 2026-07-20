@@ -208,6 +208,8 @@ def _compare_evolutions(preset_a, preset_b):
 
 
 def main():
+    import matplotlib
+    matplotlib.use("TkAgg")
     config = load_config("config.json")
     pygame.init()
     screen = _create_display(config)

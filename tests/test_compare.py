@@ -1,6 +1,3 @@
-import matplotlib
-matplotlib.use('Agg')
-
 import pygame
 from game.config import Config
 from game.config_screen import ConfigScreen

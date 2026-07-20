@@ -3,6 +3,7 @@ from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
+import matplotlib
 from dashboard.window import DashboardWindow, Evolution, compute_genome_stats
 
 
@@ -47,3 +48,7 @@ def test_dashboard_update_does_not_pause_event_loop():
     dashboard._fig.canvas.draw.assert_called_once_with()
     dashboard._fig.canvas.flush_events.assert_called_once_with()
     pause.assert_not_called()
+
+
+def test_backend_is_agg():
+    assert matplotlib.get_backend().lower() == "agg"
