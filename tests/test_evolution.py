@@ -251,3 +251,117 @@ class TestMutationAdaptation:
         evolution = Evolution(config)
         strength = evolution._effective_mutation_strength(diversity=0.001)
         assert strength >= 0.1
+
+
+class TestWeightDiff:
+    def test_identical_genomes_all_zero(self):
+        from ga.evolution import compute_weight_diff
+        genome = [0.1] * 37
+        diff = compute_weight_diff(genome, genome, hidden_size=6)
+        assert all(info["count"] == 0 for info in diff.values())
+
+    def test_single_layer_groups(self):
+        from ga.evolution import compute_weight_diff
+        old = [0.0] * 37
+        new = [0.0] * 37
+        new[0] = 100.0
+        diff = compute_weight_diff(old, new, hidden_size=6)
+        assert "hidden_1_weights" in diff
+        assert "hidden_1_bias" in diff
+        assert "output_weights" in diff
+        assert "output_bias" not in diff
+        assert diff["hidden_1_weights"]["count"] >= 1
+
+    def test_two_layer_groups(self):
+        from ga.evolution import compute_weight_diff
+        old = [0.0] * 79
+        new = [0.0] * 79
+        new[60] = 100.0
+        diff = compute_weight_diff(old, new, hidden_size=6, num_hidden_layers=2)
+        assert "hidden_1_weights" in diff
+        assert "hidden_2_weights" in diff
+        assert "output_weights" in diff
+
+    def test_three_layer_groups(self):
+        from ga.evolution import compute_weight_diff
+        old = [0.0] * 121
+        new = [0.0] * 121
+        new[100] = 100.0
+        diff = compute_weight_diff(old, new, hidden_size=6, num_hidden_layers=3)
+        assert "hidden_1_weights" in diff
+        assert "hidden_2_weights" in diff
+        assert "hidden_3_weights" in diff
+        assert "output_weights" in diff
+
+    def test_large_shift_in_output_weights_counted(self):
+        from ga.evolution import compute_weight_diff
+        old = [0.0] * 37
+        new = [0.0] * 37
+        for i in range(31, 36):
+            new[i] = 100.0
+        diff = compute_weight_diff(old, new, hidden_size=6)
+        assert diff["output_weights"]["count"] >= 4
+
+    def test_diff_with_variation_threshold_excludes_small_shifts(self):
+        from ga.evolution import compute_weight_diff
+        np.random.seed(0)
+        old = np.zeros(37)
+        new = np.zeros(37)
+        new[:3] = [5.0, 5.0, 5.0]
+        new[3:37] = [0.05] * 34
+        diff = compute_weight_diff(old, new, hidden_size=6)
+        total_count = sum(info["count"] for info in diff.values())
+        assert total_count < 37
+
+    def test_returns_dict_with_count_and_total(self):
+        from ga.evolution import compute_weight_diff
+        diff = compute_weight_diff([0.0] * 37, [0.0] * 37, hidden_size=6)
+        assert set(diff.keys()) == {
+            "hidden_1_weights", "hidden_1_bias", "output_weights"
+        }
+        for info in diff.values():
+            assert "count" in info
+            assert "total" in info
+
+    def test_two_layer_returns_dict_with_all_groups(self):
+        from ga.evolution import compute_weight_diff
+        diff = compute_weight_diff([0.0] * 79, [0.0] * 79, hidden_size=6, num_hidden_layers=2)
+        assert set(diff.keys()) == {
+            "hidden_1_weights", "hidden_1_bias",
+            "hidden_2_weights", "hidden_2_bias",
+            "output_weights"
+        }
+
+
+class TestWeightDiffIntegration:
+    def test_silent_when_best_fitness_does_not_improve(self, capsys):
+        from ga.evolution import Evolution
+        config = _make_config()
+        config.population_size = 5
+        config.max_generations = 3
+        np.random.seed(42)
+
+        def mock_evaluator(cfg, pop, seed, hidden_size):
+            return [1.0] * len(pop), []
+
+        evolution = Evolution(config, evaluator=mock_evaluator)
+        evolution.step()
+        captured = capsys.readouterr()
+        assert "best fitness" not in captured.out.lower()
+
+    def test_prints_when_best_fitness_improves(self, capsys):
+        from ga.evolution import Evolution
+        config = _make_config()
+        config.population_size = 5
+        config.max_generations = 3
+        np.random.seed(42)
+
+        call_count = [0]
+        def mock_evaluator(cfg, pop, seed, hidden_size):
+            call_count[0] += 1
+            return [float(call_count[0])] * len(pop), []
+
+        evolution = Evolution(config, evaluator=mock_evaluator)
+        evolution.step()
+        captured = capsys.readouterr()
+        assert "best fitness" in captured.out.lower() or "weight" in captured.out.lower()

@@ -22,6 +22,37 @@ def derive_seed(master_seed, generation):
     return int(hashlib.md5(key).hexdigest(), 16) % (2**31)
 
 
+def compute_weight_diff(old_genome, new_genome, hidden_size, input_size=4, num_hidden_layers=1):
+    diff = np.asarray(new_genome, dtype=np.float64) - np.asarray(old_genome, dtype=np.float64)
+    sigma = float(np.std(np.abs(diff)))
+    abs_diff = np.abs(diff)
+
+    groups = {}
+    cursor = 0
+    prev_size = input_size
+    for i in range(num_hidden_layers):
+        w_len = hidden_size * prev_size
+        groups[f"hidden_{i+1}_weights"] = {
+            "count": int(np.sum(abs_diff[cursor:cursor + w_len] > sigma)),
+            "total": w_len,
+        }
+        cursor += w_len
+        b_len = hidden_size
+        groups[f"hidden_{i+1}_bias"] = {
+            "count": int(np.sum(abs_diff[cursor:cursor + b_len] > sigma)),
+            "total": b_len,
+        }
+        cursor += b_len
+        prev_size = hidden_size
+
+    o_len = hidden_size
+    groups["output_weights"] = {
+        "count": int(np.sum(abs_diff[cursor:cursor + o_len] > sigma)),
+        "total": o_len,
+    }
+    return groups
+
+
 class Evolution:
     END_RUNNING = "running"
     END_MAX_GENS = "max_generations"
@@ -87,10 +118,14 @@ class Evolution:
         diversity = self._compute_diversity()
 
         if gen_best > self._best_fitness:
+            old_best = self._best_fitness
+            old_genome = self._best_genome
             self._best_fitness = gen_best
             self._best_genome = self.population[best_idx].copy()
             self._plateau_count = 0
             self._plateau_started_gen = self.generation + 1
+            if old_genome is not None:
+                self._print_weight_diff(old_genome, self._best_genome, old_best, gen_best)
         else:
             self._plateau_count += 1
 
@@ -103,6 +138,21 @@ class Evolution:
             "diversity": diversity,
         })
         return fitnesses
+
+    def _print_weight_diff(self, old_genome, new_genome, old_fitness, new_fitness):
+        diff = compute_weight_diff(
+            old_genome, new_genome,
+            hidden_size=self._config.hidden_layer_size,
+            input_size=4,
+            num_hidden_layers=self._config.num_hidden_layers,
+        )
+        delta = new_fitness - old_fitness
+        print(
+            f"Gen {self.generation}: best fitness "
+            f"{old_fitness:.1f} -> {new_fitness:.1f} (+{delta:.1f})"
+        )
+        for group, info in diff.items():
+            print(f"  {group}: {info['count']} of {info['total']} shifted >1σ")
 
     def _effective_mutation_strength(self, diversity=None):
         if self._config.mutation_adaptation == "none":
