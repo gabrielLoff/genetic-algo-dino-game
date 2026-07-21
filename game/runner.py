@@ -1,6 +1,3 @@
-from game.dino import Dino
-from game.obstacle import GameSpeed, ObstacleManager
-from game.brain import Brain, JumpController
 from game.simulation import GameSimulation
 
 
@@ -31,6 +28,54 @@ class RunResult:
         return fn(self)
 
 
+class RunStatsCollector:
+    def __init__(self, config):
+        self._ground_y = config.ground_y
+        self.distance = 0.0
+        self.obstacles_cleared = 0
+        self.jumps_count = 0
+        self.near_misses = 0
+        self.died_by_collision = False
+        self.time_alive = 0.0
+
+    def __call__(self, state):
+        if state.jumped:
+            self.jumps_count += 1
+
+        if state.obs_manager.collision_with(state.dino_hitbox, self._ground_y):
+            self.died_by_collision = True
+            return False
+
+        for cactus in state.obstacles:
+            if cactus.x + cactus.width < state.dino.x and not cactus.cleared:
+                cactus.cleared = True
+                self.obstacles_cleared += 1
+                if abs(cactus.x + cactus.width - state.dino.x) < 30:
+                    self.near_misses += 1
+
+        self.distance += state.speed * (1.0 / 60.0)
+        self.time_alive = state.time_alive + (1.0 / 60.0)
+        return None
+
+    def to_run_result(self, brain_index, config):
+        died_by_time_cap = (
+            self.time_alive >= config.time_cap_seconds
+            and not self.died_by_collision
+        )
+        result = RunResult(
+            brain_index=brain_index,
+            distance=self.distance,
+            obstacles_cleared=self.obstacles_cleared,
+            jumps_count=self.jumps_count,
+            near_misses=self.near_misses,
+            time_alive=self.time_alive,
+            died_by_collision=self.died_by_collision,
+            died_by_time_cap=died_by_time_cap,
+        )
+        result.fitness_value = result.fitness(config.fitness_function)
+        return result
+
+
 class RunSimulation:
     def __init__(self, config, seed=42):
         self._config = config
@@ -39,56 +84,9 @@ class RunSimulation:
     def run_brain(self, genome, brain_index=0):
         config = self._config
         sim = GameSimulation(config, genome, self._seed)
-
-        total_distance = 0.0
-        obstacles_cleared = 0
-        jumps_count = 0
-        near_misses = 0
-        died_by_collision = False
-        died_by_time_cap = False
-        time_alive = 0.0
-        last_output = 0.0
-
-        def on_frame(state, frame, t):
-            nonlocal total_distance, obstacles_cleared, jumps_count
-            nonlocal near_misses, died_by_collision, died_by_time_cap
-            nonlocal time_alive
-
-            if state.jumped:
-                jumps_count += 1
-
-            if state.obs_manager.collision_with(state.dino_hitbox, config.ground_y):
-                died_by_collision = True
-                return False
-
-            for cactus in state.obstacles:
-                if cactus.x + cactus.width < state.dino.x and not cactus.cleared:
-                    cactus.cleared = True
-                    obstacles_cleared += 1
-                    if abs(cactus.x + cactus.width - state.dino.x) < 30:
-                        near_misses += 1
-
-            total_distance += state.speed * (1.0 / 60.0)
-            time_alive = t + (1.0 / 60.0)
-            return True
-
-        final_frame, time_alive = sim.run(on_frame)
-
-        if time_alive >= config.time_cap_seconds and not died_by_collision:
-            died_by_time_cap = True
-
-        result = RunResult(
-            brain_index=brain_index,
-            distance=total_distance,
-            obstacles_cleared=obstacles_cleared,
-            jumps_count=jumps_count,
-            near_misses=near_misses,
-            time_alive=time_alive,
-            died_by_collision=died_by_collision,
-            died_by_time_cap=died_by_time_cap,
-        )
-        result.fitness_value = result.fitness(config.fitness_function)
-        return result
+        collector = RunStatsCollector(config)
+        sim.run(observers=[collector])
+        return collector.to_run_result(brain_index, config)
 
 
 def run_generation(config, population, seed=42, hidden_size=6):
