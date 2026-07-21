@@ -118,3 +118,9 @@ If the best fitness does not improve for this many Generations in a row, the Evo
 If set, this seed deterministically derives the per-Generation Obstacle seeds (`ga/evolution.py:derive_seed`). Same `master_seed` produces the same Obstacle sequence for every Brain in a Generation, ensuring fair fitness comparisons. With `None`, each Generation uses a random seed.
 
 Reproducibility tip: setting `master_seed` to any integer makes the entire Evolution replayable, which is what every preset in `presets.json` does.
+
+### `narrated_mode`
+
+**Default:** `False` · **Range:** boolean
+
+When enabled, prints a plain-English summary after each generation's fitness line. Designed for presenters to read aloud to a non-expert audience. Covers generation progress, survival times, obstacle-clearing rates, improvement trends, plateau detection, and end-of-evolution summaries. The output is prefixed with "Narrator:" to distinguish it from technical console output.

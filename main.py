@@ -3,6 +3,7 @@ import time
 from game.config import load_config, Config
 from game.config_screen import ConfigScreen
 from ga.evolution import Evolution, derive_seed
+from ga.narrator import narrate_generation
 from dashboard.window import DashboardWindow, compute_genome_stats
 from replay.logger import LogStore
 from replay.player import record_run_to_log, ReplayPlayer
@@ -111,6 +112,7 @@ def _run_evolution(config, log_store, interactive=True):
     print(f"Gen {evolution.history[-1]['generation']:3d} | "
           f"best={evolution.history[-1]['best_fitness']:8.1f} "
           f"avg={evolution.history[-1]['avg_fitness']:8.1f}")
+    narrate_generation(evolution, config)
     dashboard.update(evolution)
 
     remaining = 0
@@ -126,6 +128,7 @@ def _run_evolution(config, log_store, interactive=True):
         last = evolution.history[-1]
         print(f"Gen {last['generation']:3d} | best={last['best_fitness']:8.1f} "
               f"avg={last['avg_fitness']:8.1f}")
+        narrate_generation(evolution, config)
 
         if not interactive:
             continue

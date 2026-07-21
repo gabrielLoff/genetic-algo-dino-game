@@ -29,6 +29,8 @@ PARAM_SPECS = [
      "Stop if best fitness doesn't improve for this many gens"),
     ("master_seed", None, None, None, "Genetic Algorithm", "Master Seed", None,
      "Fixed seed for reproducible evolution; Random if None"),
+    ("narrated_mode", False, False, True, "Genetic Algorithm", "Narrated Mode", None,
+     "Print plain-English generation summaries for presentations"),
     ("hidden_layer_size", 6, 1, 100, "Neural Network", "Hidden Layer Size", int,
      "Number of neurons in each hidden layer of the brain"),
     ("num_hidden_layers", 1, 1, 3, "Neural Network", "Hidden Layers", int,
@@ -120,6 +122,7 @@ class Config:
     ghost_mode: str = "off"
     ghost_count: int = 3
     fullscreen: bool = False
+    narrated_mode: bool = False
 
     @property
     def ground_y(self):
