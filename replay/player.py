@@ -70,10 +70,10 @@ class ReplayPlayer:
         gauge_h = 100
 
         brain_output = record.brain_output
-        if isinstance(brain_output, (list,)) and hasattr(brain_output, '__len__'):
+        if hasattr(brain_output, '__len__') and not isinstance(brain_output, str):
             outputs = list(brain_output)
-        elif isinstance(brain_output, float):
-            outputs = [brain_output]
+        elif isinstance(brain_output, (int, float)):
+            outputs = [float(brain_output)]
         else:
             outputs = [float(brain_output)]
 
