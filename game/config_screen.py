@@ -211,6 +211,10 @@ class ConfigScreen:
                 self._confirming_preset = False
             return
 
+        if self._save_message is not None:
+            self._save_message = None
+            return
+
         if self._input_mode:
             self._handle_input_key(key)
             return
@@ -429,6 +433,10 @@ class ConfigScreen:
                 text_rect = text.get_rect(
                     center=(self._screen.get_width() // 2, self._screen.get_height() // 2))
                 self._screen.blit(text, text_rect)
+                hint = self._font.render("Press any key to continue", True, (150, 150, 200))
+                hint_rect = hint.get_rect(
+                    center=(self._screen.get_width() // 2, self._screen.get_height() // 2 + 24))
+                self._screen.blit(hint, hint_rect)
             pygame.display.flip()
             return
 
