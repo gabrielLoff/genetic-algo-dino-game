@@ -43,7 +43,7 @@ class ReplayPlayer:
         running = True
         frames0 = gen0_log.frames
         framesN = genN_log.frames
-        max_frames = min(len(frames0), len(framesN))
+        max_frames = max(len(frames0), len(framesN))
 
         while running and frame_idx < max_frames:
             for event in pygame.event.get():
@@ -59,9 +59,11 @@ class ReplayPlayer:
                     elif event.key == pygame.K_4:
                         self._speed = 4
 
+            clamped0 = min(frame_idx, len(frames0) - 1)
+            clampedN = min(frame_idx, len(framesN) - 1)
             self._render_compare_frame(
-                frames0[frame_idx], gen0_log,
-                framesN[frame_idx], genN_log,
+                frames0[clamped0], gen0_log,
+                framesN[clampedN], genN_log,
                 frame_idx,
             )
             frame_idx += self._speed

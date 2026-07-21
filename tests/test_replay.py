@@ -128,12 +128,13 @@ class TestReplayCompare:
         player.play_compare(log0, logN)
         pygame.quit()
 
-    def test_play_compare_stops_at_shorter_log(self):
+    def test_play_compare_runs_through_longer_log(self):
         pygame.init()
         screen = pygame.display.set_mode((800, 400))
 
         log0 = GameplayLog(generation=0, brain_index=0, seed=42)
         log0.add(FrameRecord(0, 320.0, [], 0.0, 400.0))
+        log0.add(FrameRecord(1, 320.0, [], 0.0, 400.0))
 
         logN = GameplayLog(generation=10, brain_index=0, seed=42)
         logN.add(FrameRecord(0, 320.0, [], 0.5, 400.0))
