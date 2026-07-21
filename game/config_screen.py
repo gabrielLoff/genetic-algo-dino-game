@@ -503,7 +503,7 @@ class ConfigScreen:
         name_text = self._font.render(preset_name, True, name_color)
         self._screen.blit(name_text, (110, 40))
 
-        desc_line = preset["description"]
+        desc_line = preset.get("description", "")
         if self._focus_preset:
             desc_text = self._font.render(desc_line, True, (100, 180, 255))
             self._screen.blit(desc_text, (20, self._screen.get_height() - 50))
@@ -534,5 +534,5 @@ class ConfigScreen:
         self._screen.blit(name_text_b, (130, 62))
 
         focus_preset = preset_a if focus_a else preset_b
-        desc_text = self._font.render(focus_preset["description"], True, (100, 180, 255))
+        desc_text = self._font.render(focus_preset.get("description", ""), True, (100, 180, 255))
         self._screen.blit(desc_text, (20, self._screen.get_height() - 50))
