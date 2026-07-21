@@ -240,7 +240,7 @@ class TestMutationAdaptation:
         evolution = Evolution(config)
         high = evolution._effective_mutation_strength(diversity=0.2)
         low = evolution._effective_mutation_strength(diversity=0.03)
-        assert low < high
+        assert low > high
 
     def test_effective_strength_diversity_driven_respects_floor(self):
         config = _make_config()
@@ -251,6 +251,18 @@ class TestMutationAdaptation:
         evolution = Evolution(config)
         strength = evolution._effective_mutation_strength(diversity=0.001)
         assert strength >= 0.1
+
+    def test_effective_strength_diversity_driven_respects_cap(self):
+        config = _make_config()
+        config.mutation_adaptation = "diversity_driven"
+        config.mutation_strength = 0.5
+        config.diversity_warning_threshold = 0.1
+        config.mutation_strength_cap = 1.0
+        config.mutation_strength_floor = 0.1
+        evolution = Evolution(config)
+        strength = evolution._effective_mutation_strength(diversity=0.001)
+        assert strength <= 1.0
+        assert strength > 0.1
 
 
 class TestWeightDiff:

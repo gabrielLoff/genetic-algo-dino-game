@@ -11,8 +11,10 @@ PARAM_SPECS = [
      "Magnitude of random changes to genes"),
     ("mutation_adaptation", "none", None, None, "Genetic Algorithm", "Mutation Adaptation", str,
      "How mutation strength adapts: none, linear_decay, diversity_driven"),
-    ("mutation_strength_floor", 0.01, 0.0, 0.5, "Genetic Algorithm", "Mutation Floor", float,
+    ("mutation_strength_floor", 0.05, 0.0, 0.5, "Genetic Algorithm", "Mutation Floor", float,
      "Minimum effective mutation strength when adaptation is active"),
+    ("mutation_strength_cap", 1.0, 0.0, 5.0, "Genetic Algorithm", "Mutation Cap", float,
+     "Maximum effective mutation strength for diversity-driven adaptation"),
     ("tournament_size_percent", 0.1, 0.01, 1.0, "Genetic Algorithm", "Tournament Size %", float,
      "Fraction of population competing to be a parent"),
     ("elitism_rate", 0.05, 0.0, 0.5, "Genetic Algorithm", "Elitism Rate", float,
@@ -46,7 +48,7 @@ PARAM_SPECS = [
     ("pterodactyl_probability", 0.3, 0.0, 1.0, "Game", "Pterodactyl Prob.", float,
      "Probability a spawned obstacle is a pterodactyl instead of a cactus"),
     ("diversity_warning_threshold", 0.05, 0.0, 1.0, "Game", "Diversity Warn", float,
-     "Show low-diversity warning when mean pairwise genome distance drops below this"),
+     "Triggers low-diversity warning and escalates mutation strength when adaptation is diversity-driven"),
     ("time_cap_seconds", 30, 1, 300, "Game", "Time Cap (s)", float,
      "Maximum seconds a brain can survive in a single run"),
     ("jump_cooldown_frames", 5, 1, 30, "Game", "Jump Cooldown", int,
@@ -86,7 +88,8 @@ class Config:
     mutation_rate: float = 0.1
     mutation_strength: float = 0.2
     mutation_adaptation: str = "none"
-    mutation_strength_floor: float = 0.01
+    mutation_strength_floor: float = 0.05
+    mutation_strength_cap: float = 1.0
     tournament_size_percent: float = 0.1
     elitism_rate: float = 0.05
     fitness_function: str = "survival_clearance"

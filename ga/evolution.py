@@ -171,8 +171,9 @@ class Evolution:
             )
         elif self._config.mutation_adaptation == "diversity_driven":
             threshold = max(self._config.diversity_warning_threshold, 1e-6)
+            raw = self._config.mutation_strength * (threshold / max(diversity, 1e-6))
             return max(
-                self._config.mutation_strength * (diversity / threshold),
+                min(raw, self._config.mutation_strength_cap),
                 self._config.mutation_strength_floor,
             )
 

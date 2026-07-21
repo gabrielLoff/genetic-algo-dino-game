@@ -42,13 +42,19 @@ Each mode:
 
 - **`none`** — effective strength is always `mutation_strength`. The default.
 - **`linear_decay`** — effective strength ramps down linearly from `mutation_strength` to `mutation_strength_floor` as the Generation count approaches `max_generations`. Classic simulated-annealing pattern: explore early, exploit late.
-- **`diversity_driven`** — effective strength scales with the Population's current diversity, normalized by `diversity_warning_threshold`. High diversity → full strength; low diversity → strength decays toward the floor. Self-regulating exploration.
+- **`diversity_driven`** — effective strength scales inversely with the Population's current diversity, normalized by `diversity_warning_threshold`. Low diversity → higher strength to restore variation; high diversity → lower strength. Clamped at `mutation_strength_cap` above and `mutation_strength_floor` below.
 
 ### `mutation_strength_floor`
 
-**Default:** 0.01 · **Range:** 0.0–0.5
+**Default:** 0.05 · **Range:** 0.0–0.5
 
-The minimum effective strength when `mutation_adaptation` is active. Prevents the GA from freezing when `linear_decay` reaches zero or when `diversity_driven` collapses below the threshold.
+The minimum effective strength when `mutation_adaptation` is active. Prevents the GA from freezing when `linear_decay` reaches zero or when `diversity_driven` would otherwise drop below a viable exploration rate.
+
+### `mutation_strength_cap`
+
+**Default:** 1.0 · **Range:** 0.0–5.0
+
+The maximum effective strength for `diversity_driven` adaptation. When diversity crashes below `diversity_warning_threshold`, the inverted formula would produce unbounded strength — this cap prevents a single low-diversity generation from fully randomizing every genome.
 
 ### `tournament_size_percent`
 
