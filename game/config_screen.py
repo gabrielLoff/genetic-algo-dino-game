@@ -1,6 +1,11 @@
+from collections import namedtuple
+
 import pygame
 from game.config import Config, PARAM_SPECS
-from game.presets import load_presets, apply_preset
+from game.presets import load_presets, apply_preset, save_user_preset
+
+
+SaveResult = namedtuple("SaveResult", ["status", "message"])
 
 
 class ParamGroup:
@@ -51,6 +56,7 @@ _CROSSOVER_OPTIONS = ["uniform", "single_point", "two_point"]
 _MUTATION_ADAPTATION_OPTIONS = ["none", "linear_decay", "diversity_driven"]
 
 _VIEW_TOP = 75
+_HINT_BASE = "SPACE=Start  ESC=Quit  ENTER=Edit  ARROWS=Navigate  LEFT/RIGHT=Adjust"
 
 
 class ConfigScreen:
@@ -76,6 +82,8 @@ class ConfigScreen:
         self._input_mode = False
         self._input_buffer = ""
         self.comparison_presets = None
+        self._saving_preset = False
+        self._save_message = None
 
     def _build_param_map(self):
         self._param_map = []
@@ -119,6 +127,35 @@ class ConfigScreen:
             default, _min, _max, _label, _desc = group.params[key_name]
             if isinstance(default, float):
                 self._input_buffer += "."
+
+    def _attempt_save_preset(self, name, path="user_presets.json"):
+        try:
+            save_user_preset(name, self._config, path=path)
+            return SaveResult("saved", name)
+        except ValueError as e:
+            return SaveResult("error", str(e))
+        except Exception as e:
+            return SaveResult("error", f"Could not save: {e}")
+
+    def _handle_save_input_key(self, key):
+        if key == pygame.K_RETURN:
+            self._saving_preset = False
+            name = self._input_buffer.strip()
+            if not name:
+                self._save_message = SaveResult("error", "Name cannot be empty")
+            else:
+                self._save_message = self._attempt_save_preset(name)
+            self._input_buffer = ""
+        elif key == pygame.K_ESCAPE:
+            self._saving_preset = False
+            self._input_buffer = ""
+            self._save_message = None
+        elif key == pygame.K_BACKSPACE:
+            self._input_buffer = self._input_buffer[:-1]
+        elif pygame.K_a <= key <= pygame.K_z:
+            self._input_buffer += chr(key)
+        elif key == pygame.K_SPACE:
+            self._input_buffer += " "
 
     def _scroll_to_visible(self):
         view_bottom = self._screen.get_height() - 55
@@ -175,6 +212,16 @@ class ConfigScreen:
 
         if self._input_mode:
             self._handle_input_key(key)
+            return
+
+        if self._saving_preset:
+            self._handle_save_input_key(key)
+            return
+
+        if key == pygame.K_s and not self._confirming_preset:
+            self._saving_preset = True
+            self._input_buffer = ""
+            self._save_message = None
             return
 
         if key == pygame.K_c and not self._confirming_preset:
@@ -351,8 +398,36 @@ class ConfigScreen:
                 hint = self._font.render("TAB=switch focus  SPACE=Start  ENTER=load preset  ARROWS=cycle presets", True, (120, 120, 140))
                 self._screen.blit(hint, (20, self._screen.get_height() - 30))
             else:
-                hint = self._font.render("SPACE=Start  ESC=Quit  ENTER=Edit  ARROWS=Navigate  LEFT/RIGHT=Adjust", True, (120, 120, 140))
+                hint = self._font.render(f"{_HINT_BASE}  S=Save preset", True, (120, 120, 140))
                 self._screen.blit(hint, (20, self._screen.get_height() - 30))
+            pygame.display.flip()
+            return
+
+        if self._saving_preset or self._save_message is not None:
+            box_w = 500
+            box_h = 80
+            box_x = (self._screen.get_width() - box_w) // 2
+            box_y = (self._screen.get_height() - box_h) // 2
+            pygame.draw.rect(self._screen, (50, 50, 60), (box_x, box_y, box_w, box_h))
+            pygame.draw.rect(self._screen, (100, 200, 100), (box_x, box_y, box_w, box_h), 2)
+            if self._saving_preset:
+                title = self._font.render("Save preset as:", True, (200, 200, 255))
+                self._screen.blit(title, (box_x + 20, box_y + 12))
+                value = self._font.render(f"{self._input_buffer}_", True, (255, 255, 100))
+                self._screen.blit(value, (box_x + 20, box_y + 38))
+                hint = self._font.render("ENTER=Save  ESC=Cancel  (appears on next launch)", True, (150, 150, 200))
+                self._screen.blit(hint, (box_x + 20, box_y + 58))
+            else:
+                status, message = self._save_message
+                if status == "saved":
+                    text = self._font.render(
+                        f"Saved '{message}' — appears on next launch",
+                        True, (100, 255, 100))
+                else:
+                    text = self._font.render(f"Error: {message}", True, (255, 100, 100))
+                text_rect = text.get_rect(
+                    center=(self._screen.get_width() // 2, self._screen.get_height() // 2))
+                self._screen.blit(text, text_rect)
             pygame.display.flip()
             return
 
@@ -410,7 +485,7 @@ class ConfigScreen:
         elif self._focus_preset:
             hint = self._font.render("TAB=switch focus  SPACE=Start  ENTER=load preset  ARROWS=cycle presets  C=compare", True, (120, 120, 140))
         else:
-            hint = self._font.render("SPACE=Start  ESC=Quit  ENTER=Edit  ARROWS=Navigate  LEFT/RIGHT=Adjust  C=compare", True, (120, 120, 140))
+            hint = self._font.render(f"{_HINT_BASE}  S=Save preset  C=compare", True, (120, 120, 140))
         self._screen.blit(hint, (20, self._screen.get_height() - 30))
         pygame.display.flip()
 
