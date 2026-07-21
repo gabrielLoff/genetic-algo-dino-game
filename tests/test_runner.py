@@ -22,6 +22,7 @@ class TestRunSimulation:
 
     def test_simulation_runs_headless(self):
         config = Config()
+        config.output_size = 1
         config.time_cap_seconds = 2
         genome = NeuralNetwork(hidden_size=6).to_genome()
         np.random.seed(42)
@@ -32,6 +33,7 @@ class TestRunSimulation:
 
     def test_simulation_enforces_time_cap(self):
         config = Config()
+        config.output_size = 1
         config.time_cap_seconds = 0.05
         genome = NeuralNetwork(hidden_size=6).to_genome()
         np.random.seed(42)
@@ -41,6 +43,7 @@ class TestRunSimulation:
 
     def test_same_seed_produces_same_result(self):
         config = Config()
+        config.output_size = 1
         np.random.seed(0)
         genome = NeuralNetwork(hidden_size=6).to_genome()
         sim1 = RunSimulation(config, seed=99)
@@ -52,6 +55,7 @@ class TestRunSimulation:
 
     def test_zero_speed_no_obstacles_no_death(self):
         config = Config()
+        config.output_size = 1
         config.game_speed_initial = 0
         config.game_speed_increment = 0
         config.time_cap_seconds = 0.1
@@ -67,6 +71,7 @@ class TestGenerationRunner:
     def test_generation_evaluates_all_brains(self):
         from game.runner import run_generation
         config = Config()
+        config.output_size = 1
         config.population_size = 10
         config.time_cap_seconds = 0.1
         config.fitness_function = "survival_clearance"
@@ -79,6 +84,7 @@ class TestGenerationRunner:
     def test_generation_includes_results(self):
         from game.runner import run_generation
         config = Config()
+        config.output_size = 1
         config.population_size = 5
         config.time_cap_seconds = 0.05
         population = create_population(size=5, hidden_size=6)

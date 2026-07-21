@@ -22,7 +22,7 @@ def derive_seed(master_seed, generation):
     return int(hashlib.md5(key).hexdigest(), 16) % (2**31)
 
 
-def compute_weight_diff(old_genome, new_genome, hidden_size, input_size=4, num_hidden_layers=1):
+def compute_weight_diff(old_genome, new_genome, hidden_size, input_size=4, num_hidden_layers=1, output_size=1):
     diff = np.asarray(new_genome, dtype=np.float64) - np.asarray(old_genome, dtype=np.float64)
     sigma = float(np.std(np.abs(diff)))
     abs_diff = np.abs(diff)
@@ -45,7 +45,7 @@ def compute_weight_diff(old_genome, new_genome, hidden_size, input_size=4, num_h
         cursor += b_len
         prev_size = hidden_size
 
-    o_len = hidden_size
+    o_len = hidden_size * output_size
     groups["output_weights"] = {
         "count": int(np.sum(abs_diff[cursor:cursor + o_len] > sigma)),
         "total": o_len,
@@ -79,6 +79,7 @@ class Evolution:
             hidden_size=self._config.hidden_layer_size,
             input_size=4,
             num_hidden_layers=self._config.num_hidden_layers,
+            output_size=self._config.output_size,
         )
         self._fitnesses = self._evaluate_and_track(seed=self._seed_for(0))
 
@@ -145,6 +146,7 @@ class Evolution:
             hidden_size=self._config.hidden_layer_size,
             input_size=4,
             num_hidden_layers=self._config.num_hidden_layers,
+            output_size=self._config.output_size,
         )
         delta = new_fitness - old_fitness
         print(

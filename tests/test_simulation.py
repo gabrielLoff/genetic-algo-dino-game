@@ -11,6 +11,7 @@ def _make_genome():
 def _make_config(time_cap=0.05):
     config = Config()
     config.time_cap_seconds = time_cap
+    config.output_size = 1
     return config
 
 

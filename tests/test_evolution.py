@@ -27,6 +27,7 @@ def _make_config():
     config.population_size = 10
     config.hidden_layer_size = 4
     config.time_cap_seconds = 0.1
+    config.output_size = 1
     config.mutation_rate = 0.2
     config.mutation_strength = 0.1
     config.tournament_size_percent = 0.3

@@ -33,6 +33,8 @@ PARAM_SPECS = [
      "Number of neurons in each hidden layer of the brain"),
     ("num_hidden_layers", 1, 1, 3, "Neural Network", "Hidden Layers", int,
      "Number of hidden layers in the brain (1-3)"),
+    ("output_size", 2, 1, 3, "Neural Network", "Output Size", int,
+     "Number of output neurons: 1 (jump only), 2 (jump + crouch)"),
     ("game_speed_initial", 400, 50, 2000, "Game", "Initial Speed", float,
      "Starting scroll speed (pixels/sec)"),
     ("game_speed_max", 1000, 100, 5000, "Game", "Max Speed", float,
@@ -85,6 +87,7 @@ class Config:
     population_size: int = 100
     hidden_layer_size: int = 6
     num_hidden_layers: int = 1
+    output_size: int = 2
     mutation_rate: float = 0.1
     mutation_strength: float = 0.2
     mutation_adaptation: str = "none"

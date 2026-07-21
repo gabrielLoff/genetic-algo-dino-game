@@ -11,6 +11,7 @@ class Dino:
         self.y = float(ground_y)
         self.velocity_y = 0.0
         self.state = DINO_STATE_GROUNDED
+        self.is_crouching = False
         self._ground_y = ground_y
         self._collision_inset = collision_inset
 
@@ -28,9 +29,19 @@ class Dino:
 
     def jump(self, intensity, max_jump_velocity):
         if self.state == DINO_STATE_GROUNDED:
+            self.is_crouching = False
             self.velocity_y = intensity * max_jump_velocity
             self.state = DINO_STATE_JUMPING
 
+    def crouch(self, active):
+        if active and self.state == DINO_STATE_GROUNDED:
+            self.is_crouching = True
+        else:
+            self.is_crouching = False
+
     def hitbox(self):
+        if self.is_crouching:
+            top = self.y - 25
+            return inset_hitbox(self.x, top, 40, 25, self._collision_inset)
         top = self.y - 50
         return inset_hitbox(self.x, top, 40, 50, self._collision_inset)

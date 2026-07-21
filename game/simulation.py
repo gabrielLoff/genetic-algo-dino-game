@@ -1,7 +1,7 @@
 import numpy as np
 from game.dino import Dino
 from game.obstacle import GameSpeed, ObstacleManager
-from game.brain import Brain, JumpController
+from game.brain import Brain, ActionController
 
 
 class FrameState:
@@ -16,6 +16,7 @@ class FrameState:
         self.time_alive = time_alive
         self.dino = dino
         self.obs_manager = obs_manager
+        self.is_crouching = dino.is_crouching
 
 
 class GameSimulation:
@@ -44,8 +45,8 @@ class GameSimulation:
             gap_decay=config.obstacle_gap_decay,
             pterodactyl_probability=config.pterodactyl_probability,
         )
-        brain = Brain(self._genome, hidden_size=config.hidden_layer_size, input_size=4, num_hidden_layers=config.num_hidden_layers)
-        jump_ctrl = JumpController(
+        brain = Brain(self._genome, hidden_size=config.hidden_layer_size, input_size=4, num_hidden_layers=config.num_hidden_layers, output_size=config.output_size)
+        action_ctrl = ActionController(
             threshold=0.5,
             cooldown_frames=config.jump_cooldown_frames,
         )
@@ -67,12 +68,15 @@ class GameSimulation:
             inputs = np.array([normalized_distance, obstacle_present_flag, normalized_speed, normalized_height])
             brain_output = brain.evaluate(inputs)
 
-            jumped = jump_ctrl.should_jump(brain_output)
+            jumped = action_ctrl.should_jump(brain_output)
             if jumped:
-                dino.jump(brain_output, config.dino_max_jump_velocity)
+                dino.jump(brain_output if isinstance(brain_output, float) else brain_output[0], config.dino_max_jump_velocity)
+
+            should_crouch = action_ctrl.should_crouch(brain_output)
+            dino.crouch(should_crouch)
 
             dino.update(dt, config.dino_gravity)
-            jump_ctrl.update()
+            action_ctrl.update()
 
             state = FrameState(dino, game_speed, obs_manager, brain_output, dt, jumped, frame, time_alive)
 

@@ -2,12 +2,13 @@ import json
 
 
 class FrameRecord:
-    def __init__(self, frame, dino_y, obstacles, brain_output, game_speed):
+    def __init__(self, frame, dino_y, obstacles, brain_output, game_speed, is_crouching=False):
         self.frame = frame
         self.dino_y = dino_y
         self.obstacles = obstacles
         self.brain_output = brain_output
         self.game_speed = game_speed
+        self.is_crouching = is_crouching
 
     def to_dict(self):
         return {
@@ -16,6 +17,7 @@ class FrameRecord:
             "obstacles": self.obstacles,
             "brain_output": self.brain_output,
             "game_speed": self.game_speed,
+            "is_crouching": self.is_crouching,
         }
 
     @staticmethod
@@ -26,6 +28,7 @@ class FrameRecord:
             obstacles=d["obstacles"],
             brain_output=d["brain_output"],
             game_speed=d["game_speed"],
+            is_crouching=d.get("is_crouching", False),
         )
 
 

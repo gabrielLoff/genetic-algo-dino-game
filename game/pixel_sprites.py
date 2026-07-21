@@ -32,6 +32,34 @@ def _dino_grounded_surface(w, h):
     return surf
 
 
+def _dino_crouch_surface(w, h):
+    surf = pygame.Surface((w, h), pygame.SRCALPHA)
+    body_color = (60, 60, 60)
+    eye_color = (255, 255, 255)
+    belly_color = (100, 100, 100)
+
+    rw, rh = w, h
+    pygame.draw.rect(surf, body_color, (0, 0, rw, rh))
+
+    head_w, head_h = w // 3, h // 3
+    pygame.draw.rect(surf, body_color, (rw - head_w, 1, head_w, head_h))
+
+    pygame.draw.circle(surf, eye_color, (rw - head_w + head_w - 4, head_h // 2), 2)
+
+    leg_w, leg_h = w // 6, h // 4
+    pygame.draw.rect(surf, body_color, (rw // 4, rh - 1, leg_w, leg_h))
+    pygame.draw.rect(surf, body_color, (rw // 2, rh - 1, leg_w, leg_h))
+
+    arm_w, arm_h = w // 5, h // 5
+    pygame.draw.rect(surf, body_color, (rw // 3, rh // 2, arm_w, arm_h))
+
+    belly_x = rw // 4
+    belly_w = rw // 2
+    pygame.draw.rect(surf, belly_color, (belly_x, rh // 3, belly_w, rh // 3))
+
+    return surf
+
+
 def _cactus_small_surface(w, h):
     surf = pygame.Surface((w, h), pygame.SRCALPHA)
     body_color = (34, 139, 34)
@@ -130,6 +158,7 @@ def _ground_surface(w, h):
 
 _PIXEL_SPRITES = {
     "dino.png": _dino_grounded_surface,
+    "dino_crouch.png": _dino_crouch_surface,
     "cactus_small.png": _cactus_small_surface,
     "cactus_tall.png": _cactus_tall_surface,
     "pterodactyl.png": _pterodactyl_surface,

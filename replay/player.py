@@ -62,19 +62,32 @@ class ReplayPlayer:
                     label = self._font.render(ghost_labels[gi], True, (180, 180, 180))
                     self._screen.blit(label, (80, ghost_frame.dino_y - 60))
 
-        render_dino(self._screen, 80, record.dino_y)
+        render_dino(self._screen, 80, record.dino_y, is_crouching=record.is_crouching)
 
         gauge_x = 700
         gauge_y = 20
         gauge_w = 20
         gauge_h = 100
-        pygame.draw.rect(self._screen, (200, 200, 200),
-                         (gauge_x, gauge_y, gauge_w, gauge_h), 1)
-        fill_h = int(record.brain_output * gauge_h)
-        pygame.draw.rect(self._screen, (0, 100, 200),
-                         (gauge_x, gauge_y + gauge_h - fill_h, gauge_w, fill_h))
 
-        label = self._font.render(f"Output: {record.brain_output:.2f}", True, (0, 0, 0))
+        brain_output = record.brain_output
+        if isinstance(brain_output, (list,)) and hasattr(brain_output, '__len__'):
+            outputs = list(brain_output)
+        elif isinstance(brain_output, float):
+            outputs = [brain_output]
+        else:
+            outputs = [float(brain_output)]
+
+        for oi, val in enumerate(outputs):
+            gx = gauge_x + oi * (gauge_w + 10)
+            pygame.draw.rect(self._screen, (200, 200, 200),
+                             (gx, gauge_y, gauge_w, gauge_h), 1)
+            fill_h = int(val * gauge_h)
+            color = (0, 100, 200) if oi == 0 else (200, 100, 0)
+            pygame.draw.rect(self._screen, color,
+                             (gx, gauge_y + gauge_h - fill_h, gauge_w, fill_h))
+
+        label_text = f"Output: {outputs[0]:.2f}" if len(outputs) == 1 else f"J:{outputs[0]:.2f} C:{outputs[1]:.2f}"
+        label = self._font.render(label_text, True, (0, 0, 0))
         self._screen.blit(label, (gauge_x - 80, gauge_y + gauge_h + 5))
 
         gen_label = self._font.render(
@@ -106,6 +119,7 @@ def record_run_to_log(genome, generation, brain_index, config, seed):
         log.add(FrameRecord(
             frame=frame_idx, dino_y=state.dino_y, obstacles=obstacles_data,
             brain_output=state.brain_output, game_speed=state.speed,
+            is_crouching=state.is_crouching,
         ))
         frame_idx += 1
 

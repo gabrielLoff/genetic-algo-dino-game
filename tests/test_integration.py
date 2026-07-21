@@ -5,6 +5,7 @@ from ga.evolution import Evolution
 
 def test_fitness_improves_over_five_generations_survival_clearance():
     config = Config()
+    config.output_size = 1
     config.population_size = 30
     config.hidden_layer_size = 6
     config.max_generations = 5
@@ -32,6 +33,7 @@ def test_fitness_improves_over_five_generations_survival_clearance():
 
 def test_fitness_improves_over_five_generations_survival_only():
     config = Config()
+    config.output_size = 1
     config.population_size = 30
     config.hidden_layer_size = 6
     config.max_generations = 5

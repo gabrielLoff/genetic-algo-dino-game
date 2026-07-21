@@ -42,8 +42,11 @@ def get_sprite(name, width, height, fallback_color=None):
     return None
 
 
-def render_dino(screen, x, y):
-    sprite = get_sprite("dino.png", 40, 50, fallback_color=(50, 50, 50))
+def render_dino(screen, x, y, is_crouching=False):
+    if is_crouching:
+        sprite = get_sprite("dino_crouch.png", 40, 25, fallback_color=(50, 50, 50))
+    else:
+        sprite = get_sprite("dino.png", 40, 50, fallback_color=(50, 50, 50))
     if sprite:
         screen.blit(sprite, (x, y - sprite.get_height()))
 
