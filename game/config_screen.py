@@ -162,17 +162,18 @@ class ConfigScreen:
         row_h = 20
 
         y = _VIEW_TOP
-        for gi, group in enumerate(self._menu._groups):
+        group_names = sorted(set(g.name for g in self._menu._groups))
+        for group_name in group_names:
             y += 24
-            for pi in range(len(group.params)):
-                if gi == self._selected_group and pi == self._param_map[self._selected_param][1]:
-                    screen_y = y - self._scroll_offset
-                    if screen_y < _VIEW_TOP:
-                        self._scroll_offset -= (_VIEW_TOP - screen_y)
-                    elif screen_y + row_h > view_bottom:
-                        self._scroll_offset += (screen_y + row_h - view_bottom)
-                    return
-                if gi == self._selected_group:
+            if group_name == self._current_group().name:
+                for pi in range(len(self._current_group().params)):
+                    if pi == self._param_map[self._selected_param][1]:
+                        screen_y = y - self._scroll_offset
+                        if screen_y < _VIEW_TOP:
+                            self._scroll_offset -= (_VIEW_TOP - screen_y)
+                        elif screen_y + row_h > view_bottom:
+                            self._scroll_offset += (screen_y + row_h - view_bottom)
+                        return
                     y += row_h
 
     def _current_group(self):

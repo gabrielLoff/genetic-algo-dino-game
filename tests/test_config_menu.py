@@ -94,38 +94,36 @@ def test_attempt_save_preset_captures_current_config(config_screen, tmp_path):
 
 def test_scroll_to_visible_keeps_item_in_viewport(config_screen):
     cs = config_screen
-    group_names = sorted(set(g.name for g in cs._menu._groups))
-    last_group_name = group_names[-1]
+    view_bottom = cs._screen.get_height() - 55
 
-    for gi, group in enumerate(cs._menu._groups):
-        if group.name == last_group_name:
-            cs._selected_group = gi
-            break
-
+    game_group_idx = next(
+        i for i, g in enumerate(cs._menu._groups) if g.name == "Game"
+    )
+    cs._selected_group = game_group_idx
     cs._menu._selected_group = cs._selected_group
+
+    last_game_param = len(cs._current_group().params) - 1
     cs._selected_param = next(
         i for i, (g, p, k) in enumerate(cs._param_map)
-        if g == cs._selected_group and p == 0
+        if g == cs._selected_group and p == last_game_param
     )
 
     cs._scroll_offset = 200
-    screen_height = cs._screen.get_height()
-    view_bottom = screen_height - 55
-
     cs._scroll_to_visible()
 
     y = _VIEW_TOP
-    for gi, group in enumerate(cs._menu._groups):
+    group_names = sorted(set(g.name for g in cs._menu._groups))
+    for group_name in group_names:
         y += 24
-        for pi in range(len(group.params)):
-            if gi == cs._selected_group and pi == cs._param_map[cs._selected_param][1]:
-                screen_y = y - cs._scroll_offset
-                assert screen_y >= _VIEW_TOP, (
-                    f"selected item above viewport: screen_y={screen_y}"
-                )
-                assert screen_y + 20 <= view_bottom, (
-                    f"selected item below viewport: screen_y={screen_y}"
-                )
-                break
-            if gi == cs._selected_group:
+        if group_name == cs._current_group().name:
+            for pi in range(len(cs._current_group().params)):
+                if pi == cs._param_map[cs._selected_param][1]:
+                    screen_y = y - cs._scroll_offset
+                    assert screen_y >= _VIEW_TOP, (
+                        f"selected item above viewport: screen_y={screen_y}"
+                    )
+                    assert screen_y + 20 <= view_bottom, (
+                        f"selected item below viewport: screen_y={screen_y}"
+                    )
+                    return
                 y += 20
