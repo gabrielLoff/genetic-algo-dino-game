@@ -38,6 +38,10 @@ class Cactus:
     def hitbox(self):
         return inset_hitbox(self.x, 0, self.width, self.height, 0.15)
 
+    def world_hitbox(self, ground_y):
+        top = ground_y - self.height
+        return inset_hitbox(self.x, top, self.width, self.height, 0.15)
+
 
 class Pterodactyl:
     def __init__(self, x, height_level=PTERO_HEIGHT_MID):
@@ -55,6 +59,10 @@ class Pterodactyl:
 
     def hitbox(self):
         return inset_hitbox(self.x, 0, self.width, self.height, 0.1)
+
+    def world_hitbox(self, ground_y):
+        top = self.sprite_top(ground_y)
+        return inset_hitbox(self.x, top, self.width, self.height, 0.1)
 
     def sprite_top(self, ground_y):
         return int(ground_y - self.height - ground_y * _PTERO_HEIGHT_Y[self.height_level])

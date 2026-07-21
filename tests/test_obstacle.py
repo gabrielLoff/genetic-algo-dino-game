@@ -29,6 +29,18 @@ class TestCactus:
         c2 = Cactus(x=50, size=CACTUS_SIZE_TALL)
         assert not c2.is_off_screen()
 
+    def test_cactus_world_hitbox(self):
+        c = Cactus(x=100, size=CACTUS_SIZE_SMALL)
+        ground_y = 320
+        hb = c.world_hitbox(ground_y)
+        assert isinstance(hb, tuple)
+        assert len(hb) == 4
+        x, y, w, h = hb
+        top = ground_y - c.height
+        assert y > top
+        assert y + h < ground_y
+        assert y + h > top
+
 
 class TestAABBCollision:
     def test_overlapping_rects_collide(self):
@@ -145,6 +157,18 @@ class TestPterodactyl:
         p_low = Pterodactyl(x=500, height_level=PTERO_HEIGHT_LOW)
         p_high = Pterodactyl(x=500, height_level=PTERO_HEIGHT_HIGH)
         assert p_high.sprite_top(ground_y) < p_low.sprite_top(ground_y)
+
+    def test_world_hitbox(self):
+        p = Pterodactyl(x=200, height_level=PTERO_HEIGHT_MID)
+        ground_y = 320
+        hb = p.world_hitbox(ground_y)
+        assert isinstance(hb, tuple)
+        assert len(hb) == 4
+        x, y, w, h = hb
+        expected_top = p.sprite_top(ground_y)
+        assert y > expected_top
+        assert y + h < expected_top + p.height
+        assert y + h > expected_top
 
 
 class TestObstacleManagerPterodactyl:
