@@ -97,7 +97,8 @@ class ReplayPlayer:
 
             render_dino(side_surf, 80, record.dino_y, is_crouching=record.is_crouching)
 
-            label = self._font.render(f"Gen {log.generation}", True, color_tint)
+            label = self._font.render(
+                f"Gen {log.generation}  Fit {log.fitness:.0f}", True, color_tint)
             side_surf.blit(label, (10, 10))
 
             self._screen.blit(side_surf, (offset_x, 0))
@@ -167,7 +168,8 @@ class ReplayPlayer:
         self._screen.blit(label, (gauge_x - 80, gauge_y + gauge_h + 5))
 
         gen_label = self._font.render(
-            f"Gen {log.generation}  Brain {log.brain_index}  Frame {record.frame}  {self._speed}x",
+            f"Gen {log.generation}  Fitness {log.fitness:.0f}  Brain {log.brain_index}  "
+            f"Seed {log.seed}  Frame {record.frame}  {self._speed}x",
             True, (0, 0, 0))
         self._screen.blit(gen_label, (10, 10))
 
@@ -177,11 +179,11 @@ class ReplayPlayer:
         pygame.display.flip()
 
 
-def record_run_to_log(genome, generation, brain_index, config, seed):
+def record_run_to_log(genome, generation, brain_index, config, seed, fitness=0.0):
     from game.simulation import GameSimulation
 
     sim = GameSimulation(config, genome, seed)
-    log = GameplayLog(generation=generation, brain_index=brain_index, seed=seed)
+    log = GameplayLog(generation=generation, brain_index=brain_index, seed=seed, fitness=fitness)
     frame_idx = 0
 
     def on_frame(state, frame, t):

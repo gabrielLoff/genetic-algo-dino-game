@@ -33,10 +33,11 @@ class FrameRecord:
 
 
 class GameplayLog:
-    def __init__(self, generation, brain_index, seed):
+    def __init__(self, generation, brain_index, seed, fitness=0.0):
         self.generation = generation
         self.brain_index = brain_index
         self.seed = seed
+        self.fitness = fitness
         self._frames = []
 
     def add(self, record):
@@ -51,6 +52,7 @@ class GameplayLog:
             "generation": self.generation,
             "brain_index": self.brain_index,
             "seed": self.seed,
+            "fitness": self.fitness,
             "frames": [f.to_dict() for f in self._frames],
         })
 
@@ -61,6 +63,7 @@ class GameplayLog:
             generation=data["generation"],
             brain_index=data["brain_index"],
             seed=data["seed"],
+            fitness=data.get("fitness", 0.0),
         )
         for frame_data in data["frames"]:
             log.add(FrameRecord.from_dict(frame_data))

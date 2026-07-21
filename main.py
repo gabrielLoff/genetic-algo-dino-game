@@ -20,9 +20,10 @@ def _record_best(evolution, config, log_store):
     gen = evolution.generation - 1
     ms = config.master_seed
     seed = derive_seed(ms, gen) if ms is not None else gen
+    fitness = evolution.history[-1]["best_fitness"]
     log = record_run_to_log(
         evolution.best_genome, generation=gen,
-        brain_index=0, config=config, seed=seed,
+        brain_index=0, config=config, seed=seed, fitness=fitness,
     )
     if log.frame_count > 0:
         log_store.save_best(gen, log)
@@ -42,7 +43,8 @@ def _record_ghosts(evolution, config, log_store):
         if worst_idx == fitnesses.index(max(fitnesses)):
             return
         log = record_run_to_log(pop[worst_idx], generation=gen,
-                                brain_index=worst_idx, config=config, seed=seed)
+                                brain_index=worst_idx, config=config, seed=seed,
+                                fitness=fitnesses[worst_idx])
         if log.frame_count > 0:
             log_store.save_ghosts(gen, [log], ["Worst"])
 
@@ -52,7 +54,8 @@ def _record_ghosts(evolution, config, log_store):
             return
         idx = candidates[hash(str(seed)) % len(candidates)]
         log = record_run_to_log(pop[idx], generation=gen,
-                                brain_index=idx, config=config, seed=seed)
+                                brain_index=idx, config=config, seed=seed,
+                                fitness=fitnesses[idx])
         if log.frame_count > 0:
             log_store.save_ghosts(gen, [log], ["Random"])
 
@@ -63,7 +66,8 @@ def _record_ghosts(evolution, config, log_store):
         ghost_labels = []
         for rank, idx in enumerate(ghost_indices, start=2):
             log = record_run_to_log(pop[idx], generation=gen,
-                                    brain_index=idx, config=config, seed=seed)
+                                    brain_index=idx, config=config, seed=seed,
+                                    fitness=fitnesses[idx])
             if log.frame_count > 0:
                 ghost_logs.append(log)
                 ghost_labels.append(f"#{rank}")
