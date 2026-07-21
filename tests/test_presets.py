@@ -6,13 +6,13 @@ from game.presets import load_presets, apply_preset, save_user_preset
 
 
 def test_load_presets_returns_presets_from_file():
-    presets = load_presets("presets.json")
+    presets = load_presets("presets.json", user_presets_path="/nonexistent")
     assert len(presets) >= 1
     assert all("name" in p and "description" in p for p in presets)
 
 
 def test_tutorial_preset_has_correct_values():
-    presets = load_presets("presets.json")
+    presets = load_presets("presets.json", user_presets_path="/nonexistent")
     tutorial = next((p for p in presets if p["name"] == "Tutorial"), None)
     assert tutorial is not None, "Tutorial preset not found"
     params = tutorial["params"]
@@ -26,12 +26,12 @@ def test_tutorial_preset_has_correct_values():
 
 
 def test_tutorial_preset_is_first():
-    presets = load_presets("presets.json")
+    presets = load_presets("presets.json", user_presets_path="/nonexistent")
     assert presets[0]["name"] == "Tutorial"
 
 
 def test_load_presets_returns_default_for_missing_file():
-    presets = load_presets("nonexistent_presets.json")
+    presets = load_presets("nonexistent_presets.json", user_presets_path="/nonexistent")
     assert len(presets) == 1
     assert presets[0]["name"] == "Default"
 
@@ -184,7 +184,7 @@ def test_load_presets_merges_user_presets(tmp_path):
     assert "UserA" in names
     assert "UserB" in names
 
-    builtin_count = len(load_presets("presets.json"))
+    builtin_count = len(load_presets("presets.json", user_presets_path="/nonexistent"))
     user_names = names[builtin_count:]
     assert user_names == ["UserA", "UserB"]
 
