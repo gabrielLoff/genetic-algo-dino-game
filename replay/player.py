@@ -36,6 +36,80 @@ class ReplayPlayer:
             frame_idx += self._speed
             clock.tick(60)
 
+    def play_compare(self, gen0_log, genN_log, speed=1):
+        self._speed = speed
+        clock = pygame.time.Clock()
+        frame_idx = 0
+        running = True
+        frames0 = gen0_log.frames
+        framesN = genN_log.frames
+        max_frames = min(len(frames0), len(framesN))
+
+        while running and frame_idx < max_frames:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                elif event.type == pygame.KEYDOWN:
+                    if event.key in (pygame.K_ESCAPE, pygame.K_SPACE):
+                        running = False
+                    elif event.key == pygame.K_1:
+                        self._speed = 1
+                    elif event.key == pygame.K_2:
+                        self._speed = 2
+                    elif event.key == pygame.K_4:
+                        self._speed = 4
+
+            self._render_compare_frame(
+                frames0[frame_idx], gen0_log,
+                framesN[frame_idx], genN_log,
+                frame_idx,
+            )
+            frame_idx += self._speed
+            clock.tick(60)
+
+    def _render_compare_frame(self, record0, log0, recordN, logN, frame_idx):
+        screen_w = self._screen.get_width()
+        screen_h = self._screen.get_height()
+        half_w = screen_w // 2
+
+        render_background(self._screen, screen_w, screen_h)
+
+        ground_y = 320
+        ground_h = 80
+
+        for side, (record, log, color_tint) in enumerate([
+            (record0, log0, (255, 80, 80)),
+            (recordN, logN, (50, 180, 50)),
+        ]):
+            side_surf = pygame.Surface((half_w, screen_h), pygame.SRCALPHA)
+            offset_x = side * half_w
+
+            ground_offset = int(record.frame * record.game_speed / 60) % 800
+            render_ground(side_surf, ground_y, ground_h, ground_offset)
+
+            for obs in record.obstacles:
+                if "height_level" in obs:
+                    render_pterodactyl(side_surf, obs["x"], ground_y, obs["height_level"])
+                else:
+                    render_cactus(side_surf, obs["x"], ground_y, obs.get("size", "small"))
+
+            render_dino(side_surf, 80, record.dino_y, is_crouching=record.is_crouching)
+
+            label = self._font.render(f"Gen {log.generation}", True, color_tint)
+            side_surf.blit(label, (10, 10))
+
+            self._screen.blit(side_surf, (offset_x, 0))
+
+        gen_label = self._font.render(
+            f"Gen {log0.generation} (left) vs Gen {logN.generation} (right)  Frame {frame_idx}  {self._speed}x",
+            True, (0, 0, 0))
+        self._screen.blit(gen_label, (10, screen_h - 35))
+
+        hint = self._font.render("SPACE=stop  1/2/4=speed", True, (120, 120, 120))
+        self._screen.blit(hint, (10, screen_h - 20))
+
+        pygame.display.flip()
+
     def _render_frame(self, record, log, ghost_logs=None, ghost_labels=None, frame_idx=0):
         screen_w = self._screen.get_width()
         screen_h = self._screen.get_height()

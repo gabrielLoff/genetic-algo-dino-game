@@ -93,6 +93,12 @@ class LogStore:
             self._ghost_labels.get(generation, []),
         )
 
+    def get_earliest_latest(self):
+        if not self._logs:
+            return None, None
+        sorted_gens = sorted(self._logs.keys())
+        return self._logs[sorted_gens[0]], self._logs[sorted_gens[-1]]
+
     def cleanup(self):
         self._logs.clear()
         self._ghost_logs.clear()

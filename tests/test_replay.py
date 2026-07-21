@@ -1,6 +1,8 @@
 import json
+import pygame
 import numpy as np
 from replay.logger import GameplayLog, FrameRecord, LogStore
+from replay.player import ReplayPlayer
 
 
 class TestFrameRecord:
@@ -81,3 +83,63 @@ class TestLogStore:
         assert len(store._logs) == 5
         store.cleanup()
         assert len(store._logs) == 0
+
+    def test_get_earliest_latest(self):
+        store = LogStore()
+        for gen in [3, 0, 7, 2]:
+            log = GameplayLog(generation=gen, brain_index=0, seed=gen)
+            log.add(FrameRecord(0, 320.0, [], 0.0, 400.0))
+            store.save_best(gen, log)
+        earliest, latest = store.get_earliest_latest()
+        assert earliest.generation == 0
+        assert latest.generation == 7
+
+    def test_get_earliest_latest_empty(self):
+        store = LogStore()
+        earliest, latest = store.get_earliest_latest()
+        assert earliest is None
+        assert latest is None
+
+    def test_get_earliest_latest_single(self):
+        store = LogStore()
+        log = GameplayLog(generation=5, brain_index=0, seed=5)
+        log.add(FrameRecord(0, 320.0, [], 0.0, 400.0))
+        store.save_best(5, log)
+        earliest, latest = store.get_earliest_latest()
+        assert earliest is latest
+
+
+class TestReplayCompare:
+    def test_play_compare_runs_without_crash(self):
+        pygame.init()
+        screen = pygame.display.set_mode((800, 400))
+
+        log0 = GameplayLog(generation=0, brain_index=0, seed=42)
+        log0.add(FrameRecord(0, 320.0, [], 0.0, 400.0))
+        log0.add(FrameRecord(1, 320.0, [], 0.0, 400.0))
+
+        logN = GameplayLog(generation=10, brain_index=0, seed=42)
+        logN.add(FrameRecord(0, 320.0, [], 0.5, 400.0))
+        logN.add(FrameRecord(1, 310.0, [], 0.5, 400.0))
+        logN.add(FrameRecord(2, 320.0, [], 0.0, 400.0))
+
+        player = ReplayPlayer(screen)
+        pygame.event.post(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_SPACE))
+        player.play_compare(log0, logN)
+        pygame.quit()
+
+    def test_play_compare_stops_at_shorter_log(self):
+        pygame.init()
+        screen = pygame.display.set_mode((800, 400))
+
+        log0 = GameplayLog(generation=0, brain_index=0, seed=42)
+        log0.add(FrameRecord(0, 320.0, [], 0.0, 400.0))
+
+        logN = GameplayLog(generation=10, brain_index=0, seed=42)
+        logN.add(FrameRecord(0, 320.0, [], 0.5, 400.0))
+        logN.add(FrameRecord(1, 310.0, [], 0.5, 400.0))
+        logN.add(FrameRecord(2, 320.0, [], 0.0, 400.0))
+
+        player = ReplayPlayer(screen)
+        player.play_compare(log0, logN)
+        pygame.quit()

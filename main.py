@@ -86,6 +86,20 @@ def _replay_best(config, log_store):
     pygame.quit()
 
 
+def _replay_compare(config, log_store):
+    gen0_log, genN_log = log_store.get_earliest_latest()
+    if gen0_log is None or genN_log is None or gen0_log.generation == genN_log.generation:
+        print("Need at least 2 generations for comparison replay.")
+        return
+    print(f"Comparing Gen {gen0_log.generation} vs Gen {genN_log.generation} "
+          f"({gen0_log.frame_count} vs {genN_log.frame_count} frames)...")
+    pygame.init()
+    screen = _create_display(config)
+    pygame.display.set_caption("GA Dino Game — Generation Comparison")
+    ReplayPlayer(screen).play_compare(gen0_log, genN_log)
+    pygame.quit()
+
+
 def _run_evolution(config, log_store, interactive=True):
     evolution = Evolution(config)
     dashboard = DashboardWindow()
@@ -116,7 +130,7 @@ def _run_evolution(config, log_store, interactive=True):
         if remaining > 0 and not evolution.is_finished():
             continue
 
-        print("[Enter=next gen | N=run N more | R=replay best | Q=quit]")
+        print("[Enter=next gen | N=run N more | R=replay best | C=compare gens | Q=quit]")
         while True:
             cmd = input("> ").strip().lower()
             if cmd == "":
@@ -128,12 +142,15 @@ def _run_evolution(config, log_store, interactive=True):
                 break
             elif cmd == "r":
                 _replay_best(config, log_store)
-                print("[Enter=next gen | N=run N more | R=replay best | Q=quit]")
+                print("[Enter=next gen | N=run N more | R=replay best | C=compare gens | Q=quit]")
+            elif cmd == "c":
+                _replay_compare(config, log_store)
+                print("[Enter=next gen | N=run N more | R=replay best | C=compare gens | Q=quit]")
             elif cmd.isdigit():
                 remaining = int(cmd) - 1
                 break
             else:
-                print("Unknown command. Enter=next, N=run N, R=replay, Q=quit")
+                print("Unknown command. Enter=next, N=run N, R=replay, C=compare, Q=quit")
 
     reason = evolution.end_condition
 
