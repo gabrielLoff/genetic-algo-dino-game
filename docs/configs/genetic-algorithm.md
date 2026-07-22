@@ -124,3 +124,9 @@ Reproducibility tip: setting `master_seed` to any integer makes the entire Evolu
 **Default:** `False` · **Range:** boolean
 
 When enabled, prints a plain-English summary after each generation's fitness line. Designed for presenters to read aloud to a non-expert audience. Covers generation progress, survival times, obstacle-clearing rates, improvement trends, plateau detection, and end-of-evolution summaries. The output is prefixed with "Narrator:" to distinguish it from technical console output.
+
+### `curriculum_mode`
+
+**Default:** `False` · **Range:** boolean
+
+When enabled, obstacle difficulty scales up as the population's best fitness improves. Three tiers: Easy (no pterodactyls, slow speed, wide gaps), Normal (config defaults), and Hard (more pterodactyls). Tier thresholds are set at 25% and 50% of the theoretical maximum distance (`time_cap_seconds * game_speed_initial`). The dashboard shows the current tier.

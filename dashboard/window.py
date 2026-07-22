@@ -77,6 +77,10 @@ class DashboardWindow:
             f"Population: {evolution._config.population_size}",
             f"Best fitness: {evolution.best_fitness:.1f}",
         ]
+        tier = getattr(evolution, "curriculum_tier", 0)
+        if evolution._config.curriculum_mode:
+            tier_labels = ["Easy", "Normal", "Hard"]
+            lines.append(f"Curriculum: {tier_labels[tier]}")
         if diversities:
             current_div = diversities[-1]
             lines.append(f"Diversity: {current_div:.4f}")

@@ -32,18 +32,30 @@ class GameSimulation:
         config = self._config
 
         dino = Dino(ground_y=config.ground_y, collision_inset=config.collision_inset)
+        speed_initial = config.game_speed_initial
+        gap_mean = config.obstacle_gap_mean
+        ptero_prob = config.pterodactyl_probability
+
+        tier = getattr(config, "curriculum_tier", 0)
+        if tier == 0:
+            speed_initial = speed_initial * 0.5
+            gap_mean = gap_mean * 1.6
+            ptero_prob = 0.0
+        elif tier == 2:
+            ptero_prob = min(ptero_prob * 1.5, 1.0)
+
         game_speed = GameSpeed(
-            initial=config.game_speed_initial,
+            initial=speed_initial,
             max_speed=config.game_speed_max,
             increment=config.game_speed_increment,
         )
         obs_manager = ObstacleManager(
             screen_width=config.window_width,
             ground_y=config.ground_y,
-            gap_mean=config.obstacle_gap_mean,
+            gap_mean=gap_mean,
             min_gap=config.obstacle_min_gap,
             gap_decay=config.obstacle_gap_decay,
-            pterodactyl_probability=config.pterodactyl_probability,
+            pterodactyl_probability=ptero_prob,
         )
         brain = Brain(self._genome, hidden_size=config.hidden_layer_size, input_size=4, num_hidden_layers=config.num_hidden_layers, output_size=config.output_size)
         action_ctrl = ActionController(

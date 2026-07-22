@@ -31,6 +31,8 @@ PARAM_SPECS = [
      "Fixed seed for reproducible evolution; Random if None"),
     ("narrated_mode", False, False, True, "Genetic Algorithm", "Narrated Mode", None,
      "Print plain-English generation summaries for presentations"),
+    ("curriculum_mode", False, False, True, "Genetic Algorithm", "Curriculum Mode", None,
+     "Scale obstacle difficulty up as fitness improves"),
     ("hidden_layer_size", 6, 1, 100, "Neural Network", "Hidden Layer Size", int,
      "Number of neurons in each hidden layer of the brain"),
     ("num_hidden_layers", 1, 1, 3, "Neural Network", "Hidden Layers", int,
@@ -123,6 +125,8 @@ class Config:
     ghost_count: int = 3
     fullscreen: bool = False
     narrated_mode: bool = False
+    curriculum_mode: bool = False
+    curriculum_tier: int = 0
 
     @property
     def ground_y(self):

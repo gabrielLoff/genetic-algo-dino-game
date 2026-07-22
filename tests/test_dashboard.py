@@ -40,7 +40,7 @@ def test_dashboard_update_does_not_pause_event_loop():
         best_fitness=1.0,
         best_genome=None,
         end_condition=Evolution.END_RUNNING,
-        _config=SimpleNamespace(diversity_warning_threshold=0.1, population_size=10, mutation_adaptation="none"),
+        _config=SimpleNamespace(diversity_warning_threshold=0.1, population_size=10, mutation_adaptation="none", curriculum_mode=False),
     )
 
     with patch("dashboard.window.plt.pause") as pause:

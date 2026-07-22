@@ -72,6 +72,7 @@ class Evolution:
         self._plateau_count = 0
         self._plateau_started_gen = 0
         self._end_condition = self.END_RUNNING
+        self._curriculum_tier = 0
 
         np.random.seed(self._config.master_seed or np.random.randint(0, 2**31))
         self.population = create_population(
@@ -103,7 +104,24 @@ class Evolution:
             return 0.0
         return float(np.mean(nonzero) / genome_len)
 
+    def _update_curriculum_tier(self):
+        if not self._config.curriculum_mode:
+            self._curriculum_tier = 0
+            self._config.curriculum_tier = 0
+            return
+        theoretical_max = self._config.time_cap_seconds * self._config.game_speed_initial
+        tier1 = theoretical_max * 0.25
+        tier2 = theoretical_max * 0.50
+        if self._best_fitness < tier1:
+            self._curriculum_tier = 0
+        elif self._best_fitness < tier2:
+            self._curriculum_tier = 1
+        else:
+            self._curriculum_tier = 2
+        self._config.curriculum_tier = self._curriculum_tier
+
     def _evaluate_and_track(self, seed):
+        self._update_curriculum_tier()
         fitnesses, results = self._evaluator(
             self._config,
             self.population,
@@ -137,6 +155,7 @@ class Evolution:
             "best_genome": self.population[best_idx].copy(),
             "avg_cleared": avg_cleared,
             "diversity": diversity,
+            "curriculum_tier": self._curriculum_tier,
         })
         return fitnesses
 
@@ -239,3 +258,7 @@ class Evolution:
     @property
     def effective_mutation_strength(self):
         return self._effective_mutation_strength()
+
+    @property
+    def curriculum_tier(self):
+        return self._curriculum_tier
