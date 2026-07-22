@@ -127,3 +127,57 @@ def test_scroll_to_visible_keeps_item_in_viewport(config_screen):
                     )
                     return
                 y += 20
+
+
+def test_tour_mode_loads_descriptions(config_screen):
+    cs = config_screen
+    assert len(cs._tour_descriptions) > 0
+    assert "population_size" in cs._tour_descriptions
+    assert "hidden_layer_size" in cs._tour_descriptions
+    assert "game_speed_initial" in cs._tour_descriptions
+
+
+def test_tour_mode_toggles_on_t_key(config_screen):
+    cs = config_screen
+    assert not cs._tour_mode
+    cs._handle_key(pygame.K_t)
+    assert cs._tour_mode
+    assert cs._tour_step == 0
+    cs._handle_key(pygame.K_t)
+    assert not cs._tour_mode
+
+
+def test_tour_mode_arrow_keys_navigate_steps(config_screen):
+    cs = config_screen
+    cs._tour_mode = True
+    cs._tour_step = 0
+    cs._handle_key(pygame.K_RIGHT)
+    assert cs._tour_step == 1
+    cs._handle_key(pygame.K_LEFT)
+    assert cs._tour_step == 0
+    cs._handle_key(pygame.K_LEFT)
+    total = cs._max_tour_step()
+    assert cs._tour_step == total - 1
+
+
+def test_tour_mode_exits_on_esc(config_screen):
+    cs = config_screen
+    cs._tour_mode = True
+    cs._handle_key(pygame.K_ESCAPE)
+    assert not cs._tour_mode
+
+
+def test_tour_mode_does_not_block_space_start(config_screen):
+    cs = config_screen
+    cs._tour_mode = True
+    cs._handle_key(pygame.K_SPACE)
+    assert not cs._tour_mode
+    assert cs._started
+
+
+def test_normal_mode_unaffected_by_tour_state(config_screen):
+    cs = config_screen
+    cs._tour_mode = False
+    initial_param = cs._selected_param
+    cs._handle_key(pygame.K_DOWN)
+    assert cs._selected_param != initial_param

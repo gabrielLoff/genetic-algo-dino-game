@@ -1,4 +1,6 @@
 from collections import namedtuple
+import os
+import re
 
 import pygame
 from game.config import Config, PARAM_SPECS
@@ -85,12 +87,39 @@ class ConfigScreen:
         self._saving_preset = False
         self._save_message = None
 
+        self._tour_mode = False
+        self._tour_step = 0
+        self._tour_descriptions = self._load_tour_descriptions()
+
     def _build_param_map(self):
         self._param_map = []
         for gi, group in enumerate(self._menu._groups):
             keys = list(group.params.keys())
             for pi, key in enumerate(keys):
                 self._param_map.append((gi, pi, key))
+
+    def _load_tour_descriptions(self):
+        descs = {}
+        docs_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "docs", "configs")
+        group_files = {s[4]: f"{s[4].lower().replace(' ', '-')}.md" for s in PARAM_SPECS}
+        for group, filename in group_files.items():
+            path = os.path.join(docs_dir, filename)
+            if not os.path.exists(path):
+                continue
+            with open(path, encoding="utf-8") as f:
+                content = f.read()
+            headings = list(re.finditer(r'^###\s+`?(.*?)`?\s*$', content, re.MULTILINE))
+            for i, m in enumerate(headings):
+                name = m.group(1)
+                start = m.end()
+                end = headings[i + 1].start() if i + 1 < len(headings) else len(content)
+                desc = content[start:end].strip()
+                desc = re.sub(r'\*\*.*?\*\*\s*·\s*', '', desc)
+                desc = re.sub(r'##.*', '', desc)
+                desc = re.sub(r'\n\s*\n', ' ', desc).strip()
+                if name and desc:
+                    descs[name] = desc
+        return descs
 
     def _sync_group(self):
         self._selected_group = self._param_map[self._selected_param][0]
@@ -182,6 +211,9 @@ class ConfigScreen:
     def _current_key(self):
         return self._param_map[self._selected_param][2]
 
+    def _max_tour_step(self):
+        return max(1, len(self._param_map))
+
     def run(self):
         clock = pygame.time.Clock()
 
@@ -221,6 +253,24 @@ class ConfigScreen:
 
         if self._saving_preset:
             self._handle_save_input_key(key)
+            return
+
+        if key == pygame.K_t and not self._confirming_preset:
+            self._tour_mode = not self._tour_mode
+            if self._tour_mode:
+                self._tour_step = 0
+            return
+
+        if self._tour_mode:
+            if key in (pygame.K_ESCAPE, pygame.K_SPACE):
+                self._tour_mode = False
+                if key == pygame.K_SPACE:
+                    self._started = True
+                    self._running = False
+            elif key == pygame.K_LEFT:
+                self._tour_step = (self._tour_step - 1) % self._max_tour_step()
+            elif key == pygame.K_RIGHT:
+                self._tour_step = (self._tour_step + 1) % self._max_tour_step()
             return
 
         if key == pygame.K_s and not self._confirming_preset:
@@ -376,10 +426,90 @@ class ConfigScreen:
             new_val = current + direction
             setattr(self._config, key, max(0, new_val))
 
+    def _render_tour(self):
+        screen_w = self._screen.get_width()
+        screen_h = self._screen.get_height()
+
+        total = self._max_tour_step()
+        gi, pi, param_key = self._param_map[self._tour_step]
+        group = self._menu._groups[gi]
+        default, min_val, max_val, _label, _desc = group.params[param_key]
+        current = getattr(self._config, param_key)
+        desc_text = self._tour_descriptions.get(param_key, _desc)
+
+        step_label = self._font.render(
+            f"Tour — Parameter {self._tour_step + 1} of {total}   T=exit tour", True, (150, 150, 200))
+        self._screen.blit(step_label, (20, 45))
+
+        box_w = int(screen_w * 0.6)
+        box_h = 240
+        box_x = (screen_w - box_w) // 2
+        box_y = 80
+        pygame.draw.rect(self._screen, (40, 40, 55), (box_x, box_y, box_w, box_h))
+        pygame.draw.rect(self._screen, (100, 180, 255), (box_x, box_y, box_w, box_h), 2)
+
+        name_text = self._title_font.render(_label, True, (255, 255, 150))
+        self._screen.blit(name_text, (box_x + 20, box_y + 15))
+
+        if isinstance(current, bool):
+            value_str = "On" if current else "Off"
+        elif current is None:
+            value_str = "Random"
+        elif isinstance(current, float):
+            value_str = f"{current:.3f}"
+        else:
+            value_str = str(current)
+        value_text = self._font.render(f"Current value: {value_str}", True, (200, 200, 255))
+        self._screen.blit(value_text, (box_x + 20, box_y + 48))
+
+        if min_val is not None and max_val is not None and not isinstance(current, bool):
+            bar_w = box_w - 180
+            bar_x = box_x + 160
+            bar_y = box_y + 80
+            bar_h = 16
+            pygame.draw.rect(self._screen, (80, 80, 100), (bar_x, bar_y, bar_w, bar_h))
+            ratio = (current - min_val) / (max_val - min_val) if max_val != min_val else 0.5
+            pygame.draw.rect(self._screen, (100, 200, 100), (bar_x, bar_y, int(bar_w * ratio), bar_h))
+            min_text = self._font.render(f"{min_val}", True, (150, 150, 200))
+            self._screen.blit(min_text, (bar_x - 55, bar_y - 2))
+            max_text = self._font.render(f"{max_val}", True, (150, 150, 200))
+            self._screen.blit(max_text, (bar_x + bar_w + 8, bar_y - 2))
+
+        desc_y = box_y + 110
+        wrapped = self._wrap_text(desc_text, box_w - 40)
+        for line in wrapped:
+            line_surf = self._font.render(line, True, (180, 180, 220))
+            self._screen.blit(line_surf, (box_x + 20, desc_y))
+            desc_y += 20
+
+        hint = self._font.render("← → =navigate  Esc=exit  Space=Start  T=toggle tour", True, (120, 120, 140))
+        self._screen.blit(hint, (20, screen_h - 30))
+        pygame.display.flip()
+
+    def _wrap_text(self, text, max_width):
+        words = text.split()
+        lines = []
+        current = ""
+        for word in words:
+            test = f"{current} {word}".strip()
+            if self._font.size(test)[0] <= max_width:
+                current = test
+            else:
+                if current:
+                    lines.append(current)
+                current = word
+        if current:
+            lines.append(current)
+        return lines
+
     def _render(self):
         self._screen.fill((30, 30, 40))
         title = self._title_font.render("GA Dino Game — Configuration", True, (200, 200, 255))
         self._screen.blit(title, (20, 10))
+
+        if self._tour_mode:
+            self._render_tour()
+            return
 
         if self._compare_mode:
             self._render_compare_presets()
