@@ -22,12 +22,13 @@ _END_LABELS = {
 class DashboardWindow:
     def __init__(self):
         plt.ion()
-        self._fig = plt.figure(figsize=(12, 7))
+        self._fig = plt.figure(figsize=(12, 9))
         self._fig.canvas.manager.set_window_title("GA Evolution Dashboard")
-        gs = self._fig.add_gridspec(2, 2, width_ratios=[2, 1])
+        gs = self._fig.add_gridspec(3, 2, width_ratios=[2, 1])
 
         self._ax_fitness = self._fig.add_subplot(gs[0, 0])
         self._ax_cleared = self._fig.add_subplot(gs[1, 0])
+        self._ax_diversity = self._fig.add_subplot(gs[2, 0])
         self._ax_text = self._fig.add_subplot(gs[:, 1])
         self._ax_text.axis("off")
 
@@ -51,16 +52,23 @@ class DashboardWindow:
             self._ax_fitness.axvline(x=evolution.plateau_started_gen, color="red",
                                      linestyle="--", alpha=0.5, label="Plateau start")
 
-        for i, d in enumerate(diversities):
-            if d > 0 and d < threshold:
-                self._ax_fitness.axvspan(i - 0.4, i + 0.4, color="red", alpha=0.1)
-
         self._ax_cleared.clear()
         self._ax_cleared.plot(generations, cleared, "g-o", label="Cleared", markersize=3)
-        self._ax_cleared.set_xlabel("Generation")
         self._ax_cleared.set_ylabel("Obstacles Cleared (avg)")
         self._ax_cleared.legend(loc="upper left")
         self._ax_cleared.grid(True, alpha=0.3)
+
+        self._ax_diversity.clear()
+        self._ax_diversity.plot(generations, diversities, "m-", label="Diversity")
+        self._ax_diversity.axhline(y=threshold, color="orange", linestyle="--",
+                                   label=f"Threshold ({threshold})")
+        for i, d in enumerate(diversities):
+            if d > 0 and d < threshold:
+                self._ax_diversity.axvspan(i - 0.4, i + 0.4, color="red", alpha=0.1)
+        self._ax_diversity.set_xlabel("Generation")
+        self._ax_diversity.set_ylabel("Diversity")
+        self._ax_diversity.legend(loc="upper left")
+        self._ax_diversity.grid(True, alpha=0.3)
 
         self._ax_text.clear()
         self._ax_text.axis("off")

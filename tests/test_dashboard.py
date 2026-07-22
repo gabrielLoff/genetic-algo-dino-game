@@ -32,6 +32,7 @@ def test_dashboard_update_does_not_pause_event_loop():
     dashboard._fig = MagicMock()
     dashboard._ax_fitness = MagicMock()
     dashboard._ax_cleared = MagicMock()
+    dashboard._ax_diversity = MagicMock()
     dashboard._ax_text = MagicMock()
     evolution = SimpleNamespace(
         history=[{"generation": 0, "best_fitness": 1.0, "avg_fitness": 0.5}],
