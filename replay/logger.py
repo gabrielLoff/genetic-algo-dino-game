@@ -74,7 +74,7 @@ class GameplayLog:
         return list(self._frames)
 
 
-class LogStore:
+class GenerationArchive:
     def __init__(self):
         self._logs = {}
         self._ghost_logs = {}
@@ -102,7 +102,82 @@ class LogStore:
         sorted_gens = sorted(self._logs.keys())
         return self._logs[sorted_gens[0]], self._logs[sorted_gens[-1]]
 
+    def best_frames_available(self):
+        return len(self._logs) > 0
+
+    def best_log_by_frame_count(self):
+        if not self._logs:
+            return None
+        return max(self._logs.values(), key=lambda l: l.frame_count)
+
+    def record_best(self, evolution, config):
+        from replay.player import record_run_to_log
+        from ga.evolution import derive_seed
+
+        gen = evolution.generation - 1
+        ms = config.master_seed
+        seed = derive_seed(ms, gen) if ms is not None else gen
+        fitness = evolution.history[-1]["best_fitness"]
+        log = record_run_to_log(
+            evolution.best_genome, generation=gen,
+            brain_index=0, config=config, seed=seed, fitness=fitness,
+        )
+        if log.frame_count > 0:
+            self.save_best(gen, log)
+
+    def record_ghosts(self, evolution, config):
+        from replay.player import record_run_to_log
+        from ga.evolution import derive_seed
+
+        mode = config.ghost_mode
+        if mode == "off":
+            return
+        gen = evolution.generation - 1
+        ms = config.master_seed
+        seed = derive_seed(ms, gen) if ms is not None else gen
+        fitnesses = evolution._fitnesses
+        pop = evolution.population
+
+        if mode == "worst":
+            worst_idx = fitnesses.index(min(fitnesses))
+            if worst_idx == fitnesses.index(max(fitnesses)):
+                return
+            log = record_run_to_log(pop[worst_idx], generation=gen,
+                                    brain_index=worst_idx, config=config, seed=seed,
+                                    fitness=fitnesses[worst_idx])
+            if log.frame_count > 0:
+                self.save_ghosts(gen, [log], ["Worst"])
+
+        elif mode == "random":
+            candidates = [i for i in range(len(fitnesses)) if i != fitnesses.index(max(fitnesses))]
+            if not candidates:
+                return
+            idx = candidates[hash(str(seed)) % len(candidates)]
+            log = record_run_to_log(pop[idx], generation=gen,
+                                    brain_index=idx, config=config, seed=seed,
+                                    fitness=fitnesses[idx])
+            if log.frame_count > 0:
+                self.save_ghosts(gen, [log], ["Random"])
+
+        elif mode == "top":
+            sorted_idx = sorted(range(len(fitnesses)), key=lambda i: fitnesses[i], reverse=True)
+            ghost_indices = sorted_idx[1:1 + config.ghost_count]
+            ghost_logs = []
+            ghost_labels = []
+            for rank, idx in enumerate(ghost_indices, start=2):
+                log = record_run_to_log(pop[idx], generation=gen,
+                                        brain_index=idx, config=config, seed=seed,
+                                        fitness=fitnesses[idx])
+                if log.frame_count > 0:
+                    ghost_logs.append(log)
+                    ghost_labels.append(f"#{rank}")
+            if ghost_logs:
+                self.save_ghosts(gen, ghost_logs, ghost_labels)
+
     def cleanup(self):
         self._logs.clear()
         self._ghost_logs.clear()
         self._ghost_labels.clear()
+
+
+LogStore = GenerationArchive

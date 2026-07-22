@@ -1,7 +1,7 @@
 import json
 import pygame
 import numpy as np
-from replay.logger import GameplayLog, FrameRecord, LogStore
+from replay.logger import GameplayLog, FrameRecord, GenerationArchive
 from replay.player import ReplayPlayer
 
 
@@ -64,9 +64,9 @@ class TestGameplayLog:
         assert restored._frames[0].dino_y == 320.0
 
 
-class TestLogStore:
+class TestGenerationArchive:
     def test_store_and_retrieve(self):
-        store = LogStore()
+        store = GenerationArchive()
         log = GameplayLog(generation=1, brain_index=0, seed=42)
         log.add(FrameRecord(0, 320.0, [], 0.0, 400.0))
         store.save_best(1, log)
@@ -75,7 +75,7 @@ class TestLogStore:
         assert retrieved.generation == 1
 
     def test_cleanup_clears_all(self):
-        store = LogStore()
+        store = GenerationArchive()
         for gen in range(5):
             log = GameplayLog(generation=gen, brain_index=0, seed=gen)
             log.add(FrameRecord(0, 320.0, [], 0.0, 400.0))
@@ -85,7 +85,7 @@ class TestLogStore:
         assert len(store._logs) == 0
 
     def test_get_earliest_latest(self):
-        store = LogStore()
+        store = GenerationArchive()
         for gen in [3, 0, 7, 2]:
             log = GameplayLog(generation=gen, brain_index=0, seed=gen)
             log.add(FrameRecord(0, 320.0, [], 0.0, 400.0))
@@ -95,13 +95,13 @@ class TestLogStore:
         assert latest.generation == 7
 
     def test_get_earliest_latest_empty(self):
-        store = LogStore()
+        store = GenerationArchive()
         earliest, latest = store.get_earliest_latest()
         assert earliest is None
         assert latest is None
 
     def test_get_earliest_latest_single(self):
-        store = LogStore()
+        store = GenerationArchive()
         log = GameplayLog(generation=5, brain_index=0, seed=5)
         log.add(FrameRecord(0, 320.0, [], 0.0, 400.0))
         store.save_best(5, log)

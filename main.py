@@ -5,7 +5,7 @@ from game.config_screen import ConfigScreen
 from ga.evolution import Evolution, derive_seed
 from ga.narrator import narrate_generation
 from dashboard.window import DashboardWindow, compute_genome_stats
-from replay.logger import LogStore
+from replay.logger import GenerationArchive
 from replay.player import record_run_to_log, ReplayPlayer
 
 
@@ -17,82 +17,23 @@ def _create_display(config):
     return pygame.display.set_mode((config.window_width, config.window_height), flags)
 
 
-def _record_best(evolution, config, log_store):
-    gen = evolution.generation - 1
-    ms = config.master_seed
-    seed = derive_seed(ms, gen) if ms is not None else gen
-    fitness = evolution.history[-1]["best_fitness"]
-    log = record_run_to_log(
-        evolution.best_genome, generation=gen,
-        brain_index=0, config=config, seed=seed, fitness=fitness,
-    )
-    if log.frame_count > 0:
-        log_store.save_best(gen, log)
-
-
-def _record_ghosts(evolution, config, log_store):
-    if config.ghost_mode == "off":
-        return
-    gen = evolution.generation - 1
-    ms = config.master_seed
-    seed = derive_seed(ms, gen) if ms is not None else gen
-    fitnesses = evolution._fitnesses
-    pop = evolution.population
-
-    if config.ghost_mode == "worst":
-        worst_idx = fitnesses.index(min(fitnesses))
-        if worst_idx == fitnesses.index(max(fitnesses)):
-            return
-        log = record_run_to_log(pop[worst_idx], generation=gen,
-                                brain_index=worst_idx, config=config, seed=seed,
-                                fitness=fitnesses[worst_idx])
-        if log.frame_count > 0:
-            log_store.save_ghosts(gen, [log], ["Worst"])
-
-    elif config.ghost_mode == "random":
-        candidates = [i for i in range(len(fitnesses)) if i != fitnesses.index(max(fitnesses))]
-        if not candidates:
-            return
-        idx = candidates[hash(str(seed)) % len(candidates)]
-        log = record_run_to_log(pop[idx], generation=gen,
-                                brain_index=idx, config=config, seed=seed,
-                                fitness=fitnesses[idx])
-        if log.frame_count > 0:
-            log_store.save_ghosts(gen, [log], ["Random"])
-
-    elif config.ghost_mode == "top":
-        sorted_idx = sorted(range(len(fitnesses)), key=lambda i: fitnesses[i], reverse=True)
-        ghost_indices = sorted_idx[1:1 + config.ghost_count]
-        ghost_logs = []
-        ghost_labels = []
-        for rank, idx in enumerate(ghost_indices, start=2):
-            log = record_run_to_log(pop[idx], generation=gen,
-                                    brain_index=idx, config=config, seed=seed,
-                                    fitness=fitnesses[idx])
-            if log.frame_count > 0:
-                ghost_logs.append(log)
-                ghost_labels.append(f"#{rank}")
-        if ghost_logs:
-            log_store.save_ghosts(gen, ghost_logs, ghost_labels)
-
-
-def _replay_best(config, log_store):
-    if not log_store._logs:
+def _replay_best(config, archive):
+    log = archive.best_log_by_frame_count()
+    if log is None:
         print("No replays available.")
         return
-    best_log = max(log_store._logs.values(), key=lambda l: l.frame_count)
-    gen = best_log.generation
-    ghosts, ghost_labels = log_store.get_ghosts_and_labels(gen)
-    print(f"Replaying best brain ({best_log.frame_count} frames)... Press SPACE to stop.")
+    gen = log.generation
+    ghosts, ghost_labels = archive.get_ghosts_and_labels(gen)
+    print(f"Replaying best brain ({log.frame_count} frames)... Press SPACE to stop.")
     pygame.init()
     screen = _create_display(config)
     pygame.display.set_caption("GA Dino Game — Best Brain Replay")
-    ReplayPlayer(screen).play(best_log, ghost_logs=ghosts, ghost_labels=ghost_labels)
+    ReplayPlayer(screen).play(log, ghost_logs=ghosts, ghost_labels=ghost_labels)
     pygame.quit()
 
 
-def _replay_compare(config, log_store):
-    gen0_log, genN_log = log_store.get_earliest_latest()
+def _replay_compare(config, archive):
+    gen0_log, genN_log = archive.get_earliest_latest()
     if gen0_log is None or genN_log is None or gen0_log.generation == genN_log.generation:
         print("Need at least 2 generations for comparison replay.")
         return
@@ -105,7 +46,7 @@ def _replay_compare(config, log_store):
     pygame.quit()
 
 
-def _run_evolution(config, log_store, interactive=True):
+def _run_evolution(config, archive, interactive=True):
     evolution = Evolution(config)
     dashboard = DashboardWindow()
 
@@ -122,8 +63,8 @@ def _run_evolution(config, log_store, interactive=True):
         dashboard.update(evolution)
 
         if evolution.best_genome is not None:
-            _record_best(evolution, config, log_store)
-            _record_ghosts(evolution, config, log_store)
+            archive.record_best(evolution, config)
+            archive.record_ghosts(evolution, config)
 
         last = evolution.history[-1]
         print(f"Gen {last['generation']:3d} | best={last['best_fitness']:8.1f} "
@@ -148,10 +89,10 @@ def _run_evolution(config, log_store, interactive=True):
                 evolution.stop(Evolution.END_QUIT)
                 break
             elif cmd == "r":
-                _replay_best(config, log_store)
+                _replay_best(config, archive)
                 print("[Enter=next gen | N=run N more | R=replay best | C=compare gens | Q=quit]")
             elif cmd == "c":
-                _replay_compare(config, log_store)
+                _replay_compare(config, archive)
                 print("[Enter=next gen | N=run N more | R=replay best | C=compare gens | Q=quit]")
             elif cmd.isdigit():
                 remaining = int(cmd) - 1
@@ -185,25 +126,25 @@ def _compare_evolutions(preset_a, preset_b):
 
     config_a = Config()
     apply_preset(config_a, preset_a)
-    log_store_a = LogStore()
+    archive_a = GenerationArchive()
     print(f"\n--- Running Preset A: {preset_a['name']} ---")
     print(f"    {preset_a['description']}")
     print(f"    pop={config_a.population_size} mut={config_a.mutation_rate} "
           f"fitness={config_a.fitness_function} gens={config_a.max_generations}")
     start_a = time.perf_counter()
-    evo_a = _run_evolution(config_a, log_store_a, interactive=False)
+    evo_a = _run_evolution(config_a, archive_a, interactive=False)
     elapsed_a = time.perf_counter() - start_a
-    log_store_a.cleanup()
+    archive_a.cleanup()
 
     config_b = Config()
     apply_preset(config_b, preset_b)
-    log_store_b = LogStore()
+    archive_b = GenerationArchive()
     print(f"\n--- Running Preset B: {preset_b['name']} ---")
     print(f"    {preset_b['description']}")
     print(f"    pop={config_b.population_size} mut={config_b.mutation_rate} "
           f"fitness={config_b.fitness_function} gens={config_b.max_generations}")
     start_b = time.perf_counter()
-    evo_b = _run_evolution(config_b, log_store_b, interactive=False)
+    evo_b = _run_evolution(config_b, archive_b, interactive=False)
     elapsed_b = time.perf_counter() - start_b
 
     best_a = evo_a.best_fitness
@@ -228,7 +169,7 @@ def _compare_evolutions(preset_a, preset_b):
     print(f"  {'Winner':20s} {winner:>20s}")
     print("=" * 60)
 
-    return evo_b, log_store_b
+    return evo_b, archive_b
 
 
 def main():
@@ -249,14 +190,14 @@ def main():
           f"max_generations={config.max_generations}, "
           f"fitness={config.fitness_function}")
 
-    log_store = LogStore()
+    archive = GenerationArchive()
 
     comparison_presets = config_screen.comparison_presets
     if comparison_presets:
         preset_a, preset_b = comparison_presets
-        evolution, log_store = _compare_evolutions(preset_a, preset_b)
+        evolution, archive = _compare_evolutions(preset_a, preset_b)
     else:
-        evolution = _run_evolution(config, log_store)
+        evolution = _run_evolution(config, archive)
 
     if evolution.best_genome is not None:
         stats = compute_genome_stats(evolution.best_genome)
@@ -264,8 +205,8 @@ def main():
         print(f"Best genome: min={stats['min']:.4f} max={stats['max']:.4f} "
               f"mean={stats['mean']:.4f} std={stats['std']:.4f}")
 
-    _replay_best(config, log_store)
-    log_store.cleanup()
+    _replay_best(config, archive)
+    archive.cleanup()
 
 
 if __name__ == "__main__":

@@ -3,7 +3,7 @@ from game.config import Config
 from game.config_screen import ConfigScreen
 from game.presets import load_presets
 from main import _compare_evolutions
-from replay.logger import LogStore
+from replay.logger import GenerationArchive
 
 
 def test_comparison_presets_starts_none():
@@ -33,7 +33,7 @@ def test_compare_evolutions_runs_both_presets():
     assert evolution is not None
     assert evolution.generation >= 1
     assert evolution.best_fitness >= 0
-    assert isinstance(result_store, LogStore)
+    assert isinstance(result_store, GenerationArchive)
 
 
 def test_compare_evolutions_returns_second_evolution():
