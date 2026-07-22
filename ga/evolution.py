@@ -120,6 +120,28 @@ class Evolution:
             self._curriculum_tier = 2
         self._config.curriculum_tier = self._curriculum_tier
 
+    def _print_jump_histogram(self, results):
+        total = [0, 0, 0, 0, 0]
+        for r in results:
+            bins = getattr(r, 'jump_timing_bins', None)
+            if bins is None:
+                continue
+            for i in range(5):
+                total[i] += bins[i]
+
+        grand_total = sum(total)
+        if grand_total == 0:
+            return
+
+        labels = ["Earliest", "Early  ", "Mid    ", "Late   ", "Latest "]
+        print()
+        print("  Jump Timing Distribution")
+        max_count = max(total) or 1
+        for i in range(5):
+            bar = "#" * int(total[i] / max_count * 40)
+            pct = total[i] / grand_total * 100
+            print(f"  {labels[i]} [{total[i]:4d} {pct:5.1f}%] {bar}")
+
     def _evaluate_and_track(self, seed):
         self._update_curriculum_tier()
         fitnesses, results = self._evaluator(
@@ -135,6 +157,8 @@ class Evolution:
         cleared = [r.obstacles_cleared for r in results]
         avg_cleared = sum(cleared) / len(cleared) if cleared else 0.0
         diversity = self._compute_diversity()
+
+        self._print_jump_histogram(results)
 
         if gen_best > self._best_fitness:
             old_best = self._best_fitness

@@ -11,7 +11,8 @@ _FITNESS_STRATEGIES = {
 
 class RunResult:
     def __init__(self, brain_index, distance, obstacles_cleared,
-                 jumps_count, near_misses, time_alive, died_by_collision, died_by_time_cap):
+                 jumps_count, near_misses, time_alive, died_by_collision, died_by_time_cap,
+                 jump_timing_bins=None):
         self.brain_index = brain_index
         self.distance = distance
         self.obstacles_cleared = obstacles_cleared
@@ -20,6 +21,7 @@ class RunResult:
         self.time_alive = time_alive
         self.died_by_collision = died_by_collision
         self.died_by_time_cap = died_by_time_cap
+        self.jump_timing_bins = jump_timing_bins or [0] * 5
 
     def fitness(self, strategy="survival_clearance"):
         fn = _FITNESS_STRATEGIES.get(strategy)
@@ -31,16 +33,22 @@ class RunResult:
 class RunStatsCollector:
     def __init__(self, config):
         self._ground_y = config.ground_y
+        self._window_width = config.window_width
         self.distance = 0.0
         self.obstacles_cleared = 0
         self.jumps_count = 0
         self.near_misses = 0
         self.died_by_collision = False
         self.time_alive = 0.0
+        self.jump_timing_bins = [0, 0, 0, 0, 0]
 
     def __call__(self, state):
         if state.jumped:
             self.jumps_count += 1
+            dist = state.obs_manager.distance_to_next(state.dino.x, self._window_width)
+            ratio = min(dist / self._window_width, 1.0)
+            bin_idx = min(int(ratio * 5), 4)
+            self.jump_timing_bins[bin_idx] += 1
 
         if state.obs_manager.collision_with(state.dino_hitbox, self._ground_y):
             self.died_by_collision = True
@@ -71,6 +79,7 @@ class RunStatsCollector:
             time_alive=self.time_alive,
             died_by_collision=self.died_by_collision,
             died_by_time_cap=died_by_time_cap,
+            jump_timing_bins=list(self.jump_timing_bins),
         )
         result.fitness_value = result.fitness(config.fitness_function)
         return result
