@@ -1,3 +1,6 @@
+from ga.evolution import Evolution
+
+
 def narrate_generation(evolution, config):
     if not config.narrated_mode:
         return
