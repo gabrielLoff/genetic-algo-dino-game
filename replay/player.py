@@ -179,31 +179,36 @@ class ReplayPlayer:
         pygame.display.flip()
 
 
-def record_run_to_log(genome, generation, brain_index, config, seed, fitness=0.0):
-    from game.simulation import GameSimulation
+class FrameRecorder:
+    def __init__(self, log, ground_y):
+        self._log = log
+        self._ground_y = ground_y
+        self._frame_idx = 0
 
-    sim = GameSimulation(config, genome, seed)
-    log = GameplayLog(generation=generation, brain_index=brain_index, seed=seed, fitness=fitness)
-    frame_idx = 0
-
-    def on_frame(state, frame, t):
-        nonlocal frame_idx
+    def __call__(self, state):
         obstacles_data = []
         for c in state.obstacles:
             if hasattr(c, 'size'):
                 obstacles_data.append({"x": c.x, "size": c.size})
             else:
                 obstacles_data.append({"x": c.x, "height_level": c.height_level})
-        log.add(FrameRecord(
-            frame=frame_idx, dino_y=state.dino_y, obstacles=obstacles_data,
+        self._log.add(FrameRecord(
+            frame=self._frame_idx, dino_y=state.dino_y, obstacles=obstacles_data,
             brain_output=state.brain_output, game_speed=state.speed,
             is_crouching=state.is_crouching,
         ))
-        frame_idx += 1
+        self._frame_idx += 1
 
-        if state.obs_manager.collision_with(state.dino_hitbox, config.ground_y):
+        if state.obs_manager.collision_with(state.dino_hitbox, self._ground_y):
             return False
-        return True
+        return None
 
-    sim.run(on_frame)
+
+def record_run_to_log(genome, generation, brain_index, config, seed, fitness=0.0):
+    from game.simulation import GameSimulation
+
+    sim = GameSimulation(config, genome, seed)
+    log = GameplayLog(generation=generation, brain_index=brain_index, seed=seed, fitness=fitness)
+    recorder = FrameRecorder(log, config.ground_y)
+    sim.run(observers=[recorder])
     return log
