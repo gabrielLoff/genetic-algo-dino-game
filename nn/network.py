@@ -2,7 +2,7 @@ import numpy as np
 
 
 class NeuralNetwork:
-    def __init__(self, hidden_size=6, input_size=4, num_hidden_layers=1, output_size=1):
+    def __init__(self, hidden_size=6, input_size=5, num_hidden_layers=1, output_size=1):
         self._input_size = input_size
         self._hidden_size = hidden_size
         self._num_hidden_layers = num_hidden_layers
@@ -46,7 +46,7 @@ class NeuralNetwork:
         return np.concatenate(parts)
 
     @staticmethod
-    def from_genome(genome, hidden_size=6, input_size=4, num_hidden_layers=1, output_size=1):
+    def from_genome(genome, hidden_size=6, input_size=5, num_hidden_layers=1, output_size=1):
         genome = np.asarray(genome, dtype=np.float64)
         nn = NeuralNetwork.__new__(NeuralNetwork)
         nn._input_size = input_size
@@ -83,7 +83,7 @@ class NeuralNetwork:
         return nn
 
     @staticmethod
-    def genome_size(hidden_size=6, input_size=4, num_hidden_layers=1, output_size=1):
+    def genome_size(hidden_size=6, input_size=5, num_hidden_layers=1, output_size=1):
         total = 0
         prev_size = input_size
         for _ in range(num_hidden_layers):

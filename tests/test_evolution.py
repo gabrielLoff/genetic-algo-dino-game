@@ -174,7 +174,7 @@ class TestDiversity:
         from ga.engine import create_population
         config = _make_config()
         np.random.seed(42)
-        pop = create_population(size=10, hidden_size=config.hidden_layer_size, input_size=4)
+        pop = create_population(size=10, hidden_size=config.hidden_layer_size, input_size=5)
 
         calls = []
         def mock_evaluator(cfg, p, seed, hidden_size):
@@ -269,14 +269,14 @@ class TestMutationAdaptation:
 class TestWeightDiff:
     def test_identical_genomes_all_zero(self):
         from ga.evolution import compute_weight_diff
-        genome = [0.1] * 37
+        genome = [0.1] * 43
         diff = compute_weight_diff(genome, genome, hidden_size=6)
         assert all(info["count"] == 0 for info in diff.values())
 
     def test_single_layer_groups(self):
         from ga.evolution import compute_weight_diff
-        old = [0.0] * 37
-        new = [0.0] * 37
+        old = [0.0] * 43
+        new = [0.0] * 43
         new[0] = 100.0
         diff = compute_weight_diff(old, new, hidden_size=6)
         assert "hidden_1_weights" in diff
@@ -287,8 +287,8 @@ class TestWeightDiff:
 
     def test_two_layer_groups(self):
         from ga.evolution import compute_weight_diff
-        old = [0.0] * 79
-        new = [0.0] * 79
+        old = [0.0] * 85
+        new = [0.0] * 85
         new[60] = 100.0
         diff = compute_weight_diff(old, new, hidden_size=6, num_hidden_layers=2)
         assert "hidden_1_weights" in diff
@@ -297,8 +297,8 @@ class TestWeightDiff:
 
     def test_three_layer_groups(self):
         from ga.evolution import compute_weight_diff
-        old = [0.0] * 121
-        new = [0.0] * 121
+        old = [0.0] * 127
+        new = [0.0] * 127
         new[100] = 100.0
         diff = compute_weight_diff(old, new, hidden_size=6, num_hidden_layers=3)
         assert "hidden_1_weights" in diff
@@ -308,9 +308,9 @@ class TestWeightDiff:
 
     def test_large_shift_in_output_weights_counted(self):
         from ga.evolution import compute_weight_diff
-        old = [0.0] * 37
-        new = [0.0] * 37
-        for i in range(31, 36):
+        old = [0.0] * 43
+        new = [0.0] * 43
+        for i in range(36, 42):
             new[i] = 100.0
         diff = compute_weight_diff(old, new, hidden_size=6)
         assert diff["output_weights"]["count"] >= 4
@@ -318,17 +318,17 @@ class TestWeightDiff:
     def test_diff_with_variation_threshold_excludes_small_shifts(self):
         from ga.evolution import compute_weight_diff
         np.random.seed(0)
-        old = np.zeros(37)
-        new = np.zeros(37)
+        old = np.zeros(43)
+        new = np.zeros(43)
         new[:3] = [5.0, 5.0, 5.0]
-        new[3:37] = [0.05] * 34
+        new[3:43] = [0.05] * 40
         diff = compute_weight_diff(old, new, hidden_size=6)
         total_count = sum(info["count"] for info in diff.values())
-        assert total_count < 37
+        assert total_count < 43
 
     def test_returns_dict_with_count_and_total(self):
         from ga.evolution import compute_weight_diff
-        diff = compute_weight_diff([0.0] * 37, [0.0] * 37, hidden_size=6)
+        diff = compute_weight_diff([0.0] * 43, [0.0] * 43, hidden_size=6)
         assert set(diff.keys()) == {
             "hidden_1_weights", "hidden_1_bias", "output_weights"
         }
@@ -338,7 +338,7 @@ class TestWeightDiff:
 
     def test_two_layer_returns_dict_with_all_groups(self):
         from ga.evolution import compute_weight_diff
-        diff = compute_weight_diff([0.0] * 79, [0.0] * 79, hidden_size=6, num_hidden_layers=2)
+        diff = compute_weight_diff([0.0] * 85, [0.0] * 85, hidden_size=6, num_hidden_layers=2)
         assert set(diff.keys()) == {
             "hidden_1_weights", "hidden_1_bias",
             "hidden_2_weights", "hidden_2_bias",

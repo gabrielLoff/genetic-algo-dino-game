@@ -14,7 +14,7 @@ from game.runner import RunResult
 def test_create_population_generates_correct_number():
     pop = create_population(size=10, hidden_size=6)
     assert len(pop) == 10
-    genome_len = (6 * 4) + 6 + 6 + 1
+    genome_len = (6 * 5) + 6 + 6 + 1
     assert all(len(g) == genome_len for g in pop)
 
 

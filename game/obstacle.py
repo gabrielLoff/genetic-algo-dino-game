@@ -140,6 +140,13 @@ class ObstacleManager:
             return 0.0
         return _PTERO_HEIGHT_Y.get(nearest.height_level, 0.0)
 
+    def nearest_obstacle_is_ptero(self, dino_x):
+        ahead = [c for c in self.obstacles if c.x > dino_x]
+        if not ahead:
+            return 0.0
+        nearest = min(ahead, key=lambda c: c.x)
+        return 1.0 if isinstance(nearest, Pterodactyl) else 0.0
+
     def collision_with(self, dino_hitbox, ground_y):
         for obs in self.obstacles:
             if isinstance(obs, Cactus):
