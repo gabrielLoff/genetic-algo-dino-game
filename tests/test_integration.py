@@ -10,9 +10,13 @@ def test_fitness_improves_over_five_generations_survival_clearance():
     config.hidden_layer_size = 6
     config.max_generations = 5
     config.plateau_generations = 20
-    config.time_cap_seconds = 5
+    config.time_cap_seconds = 3
     config.fitness_function = "survival_clearance"
     config.pterodactyl_probability = 0.0
+    config.game_speed_initial = 1000
+    config.game_speed_max = 1500
+    config.obstacle_gap_mean = 250
+    config.obstacle_min_gap = 150
     config.master_seed = 42
 
     np.random.seed(42)
@@ -38,9 +42,13 @@ def test_fitness_improves_over_five_generations_survival_only():
     config.hidden_layer_size = 6
     config.max_generations = 5
     config.plateau_generations = 20
-    config.time_cap_seconds = 5
+    config.time_cap_seconds = 3
     config.fitness_function = "survival_only"
     config.pterodactyl_probability = 0.0
+    config.game_speed_initial = 1000
+    config.game_speed_max = 1500
+    config.obstacle_gap_mean = 250
+    config.obstacle_min_gap = 150
     config.master_seed = 7
 
     np.random.seed(7)

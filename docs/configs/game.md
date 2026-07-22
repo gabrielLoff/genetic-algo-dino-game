@@ -104,15 +104,15 @@ Height of the ground area at the bottom of the screen. The ground occupies the b
 
 ### `window_width`
 
-**Default:** 800 · **Range:** 400–2560
+**Default:** 1024 · **Range:** 400–2560
 
-Game window width in pixels.
+Game window width in pixels. Larger widths give the config screen and replay more room to render parameter descriptions and overlays.
 
 ### `window_height`
 
-**Default:** 400 · **Range:** 200–1440
+**Default:** 640 · **Range:** 200–1440
 
-Game window height in pixels.
+Game window height in pixels. Larger heights give the config screen and replay more room to render parameter descriptions and overlays.
 
 ### `obstacle_seed`
 

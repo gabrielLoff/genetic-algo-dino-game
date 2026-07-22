@@ -67,9 +67,9 @@ PARAM_SPECS = [
      "Upward velocity at full jump (negative = upward)"),
     ("ground_height", 80, 40, 200, "Game", "Ground Height", int,
      "Height of the ground area at the bottom of the screen"),
-    ("window_width", 800, 400, 2560, "Game", "Window Width", int,
+    ("window_width", 1024, 400, 2560, "Game", "Window Width", int,
      "Game window width in pixels"),
-    ("window_height", 400, 200, 1440, "Game", "Window Height", int,
+    ("window_height", 640, 200, 1440, "Game", "Window Height", int,
      "Game window height in pixels"),
     ("obstacle_seed", None, None, None, "Game", "Obstacle Seed", None,
      "Fixed seed for obstacle layout; Random if None"),
@@ -115,8 +115,8 @@ class Config:
     dino_gravity: float = 2000
     dino_max_jump_velocity: float = -600
     ground_height: int = 80
-    window_width: int = 800
-    window_height: int = 400
+    window_width: int = 1024
+    window_height: int = 640
     max_generations: int = 50
     plateau_generations: int = 10
     master_seed: int | None = None

@@ -433,23 +433,14 @@ class ConfigScreen:
         total = self._max_tour_step()
         gi, pi, param_key = self._param_map[self._tour_step]
         group = self._menu._groups[gi]
-        default, min_val, max_val, _label, _desc = group.params[param_key]
+        default, min_val, max_val, label, _desc = group.params[param_key]
         current = getattr(self._config, param_key)
         desc_text = self._tour_descriptions.get(param_key, _desc)
 
-        step_label = self._font.render(
-            f"Tour — Parameter {self._tour_step + 1} of {total}   T=exit tour", True, (150, 150, 200))
-        self._screen.blit(step_label, (20, 45))
-
-        box_w = int(screen_w * 0.6)
-        box_h = 240
+        padding = 30
+        box_w = min(int(screen_w * 0.75), 900)
         box_x = (screen_w - box_w) // 2
-        box_y = 80
-        pygame.draw.rect(self._screen, (40, 40, 55), (box_x, box_y, box_w, box_h))
-        pygame.draw.rect(self._screen, (100, 180, 255), (box_x, box_y, box_w, box_h), 2)
-
-        name_text = self._title_font.render(_label, True, (255, 255, 150))
-        self._screen.blit(name_text, (box_x + 20, box_y + 15))
+        box_y = 100
 
         if isinstance(current, bool):
             value_str = "On" if current else "Off"
@@ -459,30 +450,71 @@ class ConfigScreen:
             value_str = f"{current:.3f}"
         else:
             value_str = str(current)
-        value_text = self._font.render(f"Current value: {value_str}", True, (200, 200, 255))
-        self._screen.blit(value_text, (box_x + 20, box_y + 48))
 
-        if min_val is not None and max_val is not None and not isinstance(current, bool):
-            bar_w = box_w - 180
-            bar_x = box_x + 160
-            bar_y = box_y + 80
-            bar_h = 16
-            pygame.draw.rect(self._screen, (80, 80, 100), (bar_x, bar_y, bar_w, bar_h))
+        inner_w = box_w - 2 * padding
+        has_bar = min_val is not None and max_val is not None and not isinstance(current, bool)
+        if has_bar:
+            bar_value_label = f"{value_str} (min {min_val}, max {max_val})"
+        else:
+            bar_value_label = value_str
+
+        wrapped = self._wrap_text(desc_text, inner_w)
+        line_height = 22
+        desc_h = max(len(wrapped), 1) * line_height
+        box_h = padding + 40 + 30 + 50 + desc_h + padding
+
+        pygame.draw.rect(self._screen, (40, 40, 55),
+                         (box_x, box_y, box_w, box_h),
+                         border_radius=8)
+        pygame.draw.rect(self._screen, (100, 180, 255),
+                         (box_x, box_y, box_w, box_h), 2,
+                         border_radius=8)
+
+        step_label = self._font.render(
+            f"Parameter {self._tour_step + 1} of {total}",
+            True, (150, 150, 200))
+        self._screen.blit(step_label, (box_x + padding, box_y + 10))
+
+        exit_label = self._font.render("T = exit tour", True, (120, 120, 140))
+        self._screen.blit(exit_label, (box_x + box_w - exit_label.get_width() - padding,
+                                      box_y + 10))
+
+        name_y = box_y + 45
+        name_text = self._title_font.render(label, True, (255, 255, 150))
+        self._screen.blit(name_text, (box_x + padding, name_y))
+
+        value_y = name_y + 35
+        value_text = self._font.render(f"Current value:  {value_str}", True, (200, 200, 255))
+        self._screen.blit(value_text, (box_x + padding, value_y))
+
+        bar_y = value_y + 30
+        if has_bar:
+            bar_x = box_x + padding
+            bar_w = inner_w
+            bar_h = 24
+            pygame.draw.rect(self._screen, (80, 80, 100),
+                             (bar_x, bar_y, bar_w, bar_h),
+                             border_radius=4)
             ratio = (current - min_val) / (max_val - min_val) if max_val != min_val else 0.5
-            pygame.draw.rect(self._screen, (100, 200, 100), (bar_x, bar_y, int(bar_w * ratio), bar_h))
+            ratio = max(0.0, min(1.0, ratio))
+            fill_w = max(2, int(bar_w * ratio))
+            pygame.draw.rect(self._screen, (100, 200, 100),
+                             (bar_x, bar_y, fill_w, bar_h),
+                             border_radius=4)
             min_text = self._font.render(f"{min_val}", True, (150, 150, 200))
-            self._screen.blit(min_text, (bar_x - 55, bar_y - 2))
             max_text = self._font.render(f"{max_val}", True, (150, 150, 200))
-            self._screen.blit(max_text, (bar_x + bar_w + 8, bar_y - 2))
+            label_y = bar_y + bar_h + 4
+            self._screen.blit(min_text, (bar_x, label_y))
+            self._screen.blit(max_text, (bar_x + bar_w - max_text.get_width(), label_y))
 
-        desc_y = box_y + 110
-        wrapped = self._wrap_text(desc_text, box_w - 40)
+        desc_y = bar_y + (54 if has_bar else 0) + 20
         for line in wrapped:
-            line_surf = self._font.render(line, True, (180, 180, 220))
-            self._screen.blit(line_surf, (box_x + 20, desc_y))
-            desc_y += 20
+            line_surf = self._font.render(line, True, (200, 200, 230))
+            self._screen.blit(line_surf, (box_x + padding, desc_y))
+            desc_y += line_height
 
-        hint = self._font.render("← → =navigate  Esc=exit  Space=Start  T=toggle tour", True, (120, 120, 140))
+        hint = self._font.render("← → = navigate    Esc = exit    Space = Start",
+                                 True, (120, 120, 140))
         self._screen.blit(hint, (20, screen_h - 30))
         pygame.display.flip()
 
