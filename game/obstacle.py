@@ -149,21 +149,7 @@ class ObstacleManager:
 
     def collision_with(self, dino_hitbox, ground_y):
         for obs in self.obstacles:
-            if isinstance(obs, Cactus):
-                obs_hb = (
-                    obs.hitbox()[0],
-                    ground_y - obs.height,
-                    obs.hitbox()[2],
-                    obs.hitbox()[3],
-                )
-            else:
-                top = obs.sprite_top(ground_y)
-                obs_hb = (
-                    obs.hitbox()[0],
-                    top + obs.hitbox()[1],
-                    obs.hitbox()[2],
-                    obs.hitbox()[3],
-                )
+            obs_hb = obs.world_hitbox(ground_y)
             if aabb_collides(dino_hitbox, obs_hb):
                 return True
         return False
