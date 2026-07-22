@@ -52,6 +52,17 @@ class DashboardWindow:
             self._ax_fitness.axvline(x=evolution.plateau_started_gen, color="red",
                                      linestyle="--", alpha=0.5, label="Plateau start")
 
+        if evolution._config.curriculum_mode:
+            tier_labels = {0: "Easy", 1: "Normal", 2: "Hard"}
+            prev_tier = None
+            for i, r in enumerate(evolution.history):
+                tier = r.get("curriculum_tier", 0)
+                if prev_tier is not None and tier != prev_tier:
+                    label = f"{tier_labels[prev_tier]} -> {tier_labels[tier]}"
+                    self._ax_fitness.axvline(x=r["generation"], color="purple",
+                                             linestyle=":", alpha=0.6, label=label)
+                prev_tier = tier
+
         self._ax_cleared.clear()
         self._ax_cleared.plot(generations, cleared, "g-o", label="Cleared", markersize=3)
         self._ax_cleared.set_ylabel("Obstacles Cleared (avg)")
