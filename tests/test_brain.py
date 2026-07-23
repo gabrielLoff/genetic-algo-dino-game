@@ -1,6 +1,6 @@
 import numpy as np
 from nn.network import NeuralNetwork
-from game.brain import Brain, JumpController
+from game.brain import Brain, ActionController
 
 
 class TestBrain:
@@ -31,29 +31,29 @@ class TestBrain:
         assert np.array_equal(brain.genome(), genome)
 
 
-class TestJumpController:
+class TestActionController:
     def test_initial_cooldown_is_zero(self):
-        jc = JumpController(threshold=0.5, cooldown_frames=5)
+        jc = ActionController(threshold=0.5, cooldown_frames=5)
         assert jc.cooldown_remaining == 0
 
     def test_no_jump_below_threshold(self):
-        jc = JumpController(threshold=0.5, cooldown_frames=5)
+        jc = ActionController(threshold=0.5, cooldown_frames=5)
         assert jc.should_jump(0.3) is False
 
     def test_jump_on_rising_edge_above_threshold(self):
-        jc = JumpController(threshold=0.5, cooldown_frames=5)
+        jc = ActionController(threshold=0.5, cooldown_frames=5)
         assert jc.should_jump(0.3) is False
         assert jc.should_jump(0.7) is True
 
     def test_no_jump_when_staying_above_threshold(self):
-        jc = JumpController(threshold=0.5, cooldown_frames=5)
+        jc = ActionController(threshold=0.5, cooldown_frames=5)
         jc.should_jump(0.3)
         assert jc.should_jump(0.7) is True
         assert jc.should_jump(0.8) is False  # stayed above, no rising edge
         assert jc.should_jump(0.6) is False  # still above
 
     def test_jump_after_falling_below_and_rising_again(self):
-        jc = JumpController(threshold=0.5, cooldown_frames=2)
+        jc = ActionController(threshold=0.5, cooldown_frames=2)
         jc.should_jump(0.3)
         assert jc.should_jump(0.7) is True
         jc.should_jump(0.2)  # fell below
@@ -62,7 +62,7 @@ class TestJumpController:
         assert jc.should_jump(0.9) is True  # rising edge again after cooldown
 
     def test_cooldown_blocks_jump(self):
-        jc = JumpController(threshold=0.5, cooldown_frames=3)
+        jc = ActionController(threshold=0.5, cooldown_frames=3)
         assert jc.should_jump(0.8) is True
         jc.update()
         assert jc.cooldown_remaining == 2
@@ -74,7 +74,7 @@ class TestJumpController:
         assert jc.should_jump(0.9) is True
 
     def test_cooldown_decrements_each_frame(self):
-        jc = JumpController(threshold=0.5, cooldown_frames=5)
+        jc = ActionController(threshold=0.5, cooldown_frames=5)
         jc.should_jump(0.8)
         jc.update()
         assert jc.cooldown_remaining == 4
@@ -82,7 +82,7 @@ class TestJumpController:
         assert jc.cooldown_remaining == 3
 
     def test_rising_edge_false_when_in_cooldown(self):
-        jc = JumpController(threshold=0.5, cooldown_frames=3)
+        jc = ActionController(threshold=0.5, cooldown_frames=3)
         jc.should_jump(0.3)
         jc.should_jump(0.8)  # triggers jump, starts cooldown
         jc.update()

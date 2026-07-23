@@ -70,7 +70,7 @@ Maximum duration of a single Run. A Brain that never hits an Obstacle still ends
 
 **Default:** 5 · **Range:** 1–30
 
-Minimum Frames between consecutive jumps (`game/brain.py:JumpController`). Prevents the Brain from spamming jumps for free height. Smaller values let the Brain attempt more jumps per second.
+Minimum Frames between consecutive jumps (`game/brain.py:ActionController`). Prevents the Brain from spamming jumps for free height. Smaller values let the Brain attempt more jumps per second.
 
 **Jump Efficiency** preset uses 3 to allow more jumps but penalizes them via the fitness function.
 

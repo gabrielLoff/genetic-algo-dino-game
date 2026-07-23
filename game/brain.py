@@ -53,17 +53,3 @@ class ActionController:
             if self.cooldown_remaining == 0:
                 self._was_above_threshold = False
 
-
-class JumpController:
-    def __init__(self, threshold=0.5, cooldown_frames=5):
-        self._ctrl = ActionController(threshold=threshold, cooldown_frames=cooldown_frames)
-
-    @property
-    def cooldown_remaining(self):
-        return self._ctrl.cooldown_remaining
-
-    def should_jump(self, brain_output):
-        return self._ctrl.should_jump(brain_output)
-
-    def update(self):
-        self._ctrl.update()
