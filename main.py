@@ -110,6 +110,9 @@ def _run_evolution(config, archive, interactive=True):
               f"(reached max_generations)")
     elif reason == Evolution.END_QUIT:
         print(f"Evolution stopped by user after {evolution.generation} generations")
+    elif reason == Evolution.END_FIRST_SURVIVOR:
+        print(f"Evolution finished after {evolution.generation} generations "
+              f"(brain survived the full time cap)")
     else:
         print(f"Evolution finished after {evolution.generation} generations")
 

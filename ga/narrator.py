@@ -54,5 +54,9 @@ def narrate_generation(evolution, config):
         parts.append(
             f"Evolution stopped: no improvement for {config.plateau_generations} generations."
         )
+    elif evolution.end_condition == Evolution.END_FIRST_SURVIVOR:
+        parts.append(
+            "A brain survived the full time cap! Evolution stopped early — problem solved."
+        )
 
     print("Narrator: " + "".join(parts))

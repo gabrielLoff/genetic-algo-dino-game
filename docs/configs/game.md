@@ -141,6 +141,12 @@ Each mode:
 
 Number of ghost Brains when `ghost_mode=top`. Ignored for other modes.
 
+### `stop_on_first_survivor`
+
+**Default:** `False` · **Range:** boolean
+
+When enabled, evolution stops as soon as any Brain survives the full time cap without colliding. This is useful for demonstrations — you know the problem is "solved" when a Brain makes it to the end. When disabled (default), evolution always runs through all generations or until a plateau.
+
 ### `fullscreen`
 
 **Default:** `False` · **Range:** boolean

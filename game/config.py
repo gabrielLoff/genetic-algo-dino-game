@@ -79,8 +79,10 @@ PARAM_SPECS = [
     ("ghost_mode", "off", None, None, "Game", "Ghost Mode", str,
      "Show ghost brains in replay: off, worst, random, top",
      ["off", "worst", "random", "top"]),
-    ("ghost_count", 3, 1, 10, "Game", "Ghost Count", int,
+     ("ghost_count", 3, 1, 10, "Game", "Ghost Count", int,
      "Number of ghost brains when mode is top", None),
+    ("stop_on_first_survivor", False, False, True, "Game", "Stop on First Survivor", None,
+     "Stop evolution as soon as any brain survives the full time cap", None),
     ("fullscreen", False, False, True, "Game", "Fullscreen", None,
      "Run in borderless fullscreen for presentations", None),
 ]
@@ -127,6 +129,7 @@ class Config:
     obstacle_seed: int | None = None
     ghost_mode: str = "off"
     ghost_count: int = 3
+    stop_on_first_survivor: bool = False
     fullscreen: bool = False
     narrated_mode: bool = False
     curriculum_mode: bool = False

@@ -69,6 +69,7 @@ class Evolution:
     END_MAX_GENS = "max_generations"
     END_PLATEAU = "plateau"
     END_QUIT = "quit"
+    END_FIRST_SURVIVOR = "first_survivor"
 
     def __init__(self, config, evaluator=None):
         if evaluator is None:
@@ -183,6 +184,13 @@ class Evolution:
         else:
             self._plateau_count += 1
 
+        if (
+            self._config.stop_on_first_survivor
+            and self._end_condition == self.END_RUNNING
+            and any(r.died_by_time_cap for r in results)
+        ):
+            self._end_condition = self.END_FIRST_SURVIVOR
+
         self.history.append(GenerationSnapshot(
             generation=self.generation,
             best_fitness=gen_best,
@@ -270,7 +278,7 @@ class Evolution:
         return self._end_condition != self.END_RUNNING
 
     def stop(self, reason):
-        if reason in (self.END_QUIT, self.END_PLATEAU, self.END_MAX_GENS):
+        if reason in (self.END_QUIT, self.END_PLATEAU, self.END_MAX_GENS, self.END_FIRST_SURVIVOR):
             self._end_condition = reason
 
     @property

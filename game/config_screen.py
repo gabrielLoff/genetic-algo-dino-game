@@ -102,6 +102,8 @@ class ConfigScreen:
                 new_val = min(max_val, new_val)
             if isinstance(default, int):
                 new_val = int(new_val)
+            elif default is None:
+                new_val = int(new_val)
             setattr(self._config, key_name, new_val)
         elif key == pygame.K_ESCAPE:
             self._input_mode = False
@@ -304,7 +306,7 @@ class ConfigScreen:
                 key_name = self._current_key()
                 group = self._current_group()
                 default, _min, _max, _label, _desc = group["params"][key_name]
-                if isinstance(default, str) or default is None:
+                if isinstance(default, str):
                     self._adjust_param(1)
                 else:
                     self._input_mode = True

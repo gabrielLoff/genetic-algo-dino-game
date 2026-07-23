@@ -16,6 +16,7 @@ _END_LABELS = {
     Evolution.END_MAX_GENS: "Reached max generations",
     Evolution.END_PLATEAU: "Fitness plateaued",
     Evolution.END_QUIT: "Stopped by user",
+    Evolution.END_FIRST_SURVIVOR: "Brain survived full time cap",
 }
 
 
