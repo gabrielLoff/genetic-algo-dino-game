@@ -1,4 +1,4 @@
-from game.config_screen import ConfigMenu, ParamGroup, ConfigScreen, _VIEW_TOP
+from game.config_screen import ConfigScreen, _VIEW_TOP
 from game.config import Config
 import pygame
 import os
@@ -18,36 +18,27 @@ def config_screen():
         pygame.quit()
 
 
-def test_param_group_creates_with_name_and_params():
-    params = {"pop_size": (100, 10, 500, "Population Size")}
-    group = ParamGroup("GA", params)
-    assert group.name == "GA"
-    assert len(group.params) == 1
-
-
-def test_config_menu_groups_all_parameters():
-    config = Config()
-    menu = ConfigMenu(config)
-    groups = menu._groups
-    group_names = {g.name for g in groups}
+def test_build_groups_returns_all_parameter_groups(config_screen):
+    cs = config_screen
+    group_names = {g["name"] for g in cs._groups}
     assert "Genetic Algorithm" in group_names or "GA" in group_names
     assert "Neural Network" in group_names or "NN" in group_names
     assert "Game" in group_names
 
 
-def test_config_menu_tracks_selected_parameter():
-    config = Config()
-    menu = ConfigMenu(config)
-    assert 0 <= menu._selected_group < len(menu._groups)
-    assert 0 <= menu._selected_param < len(menu._groups[menu._selected_group].params)
+def test_config_screen_tracks_selected_parameter(config_screen):
+    cs = config_screen
+    assert 0 <= cs._selected_group < len(cs._groups)
+    assert 0 <= cs._selected_param < len(cs._groups[cs._selected_group]["params"])
 
 
-def test_config_menu_updates_config_on_value_change():
-    config = Config()
-    menu = ConfigMenu(config)
-    orig = config.population_size
-    menu.adjust_param(1.5)
-    assert config.population_size != orig
+def test_config_screen_adjust_param_changes_value(config_screen):
+    cs = config_screen
+    cs._selected_group = 0
+    cs._selected_param = 0
+    orig = cs._config.population_size
+    cs._handle_key(pygame.K_RIGHT)
+    assert cs._config.population_size != orig
 
 
 def test_render_handles_large_scroll_offset(config_screen):
@@ -97,12 +88,11 @@ def test_scroll_to_visible_keeps_item_in_viewport(config_screen):
     view_bottom = cs._screen.get_height() - 55
 
     game_group_idx = next(
-        i for i, g in enumerate(cs._menu._groups) if g.name == "Game"
+        i for i, g in enumerate(cs._groups) if g["name"] == "Game"
     )
     cs._selected_group = game_group_idx
-    cs._menu._selected_group = cs._selected_group
 
-    last_game_param = len(cs._current_group().params) - 1
+    last_game_param = len(cs._current_group()["params"]) - 1
     cs._selected_param = next(
         i for i, (g, p, k) in enumerate(cs._param_map)
         if g == cs._selected_group and p == last_game_param
@@ -112,11 +102,11 @@ def test_scroll_to_visible_keeps_item_in_viewport(config_screen):
     cs._scroll_to_visible()
 
     y = _VIEW_TOP
-    group_names = sorted(set(g.name for g in cs._menu._groups))
+    group_names = sorted(set(g["name"] for g in cs._groups))
     for group_name in group_names:
         y += 24
-        if group_name == cs._current_group().name:
-            for pi in range(len(cs._current_group().params)):
+        if group_name == cs._current_group()["name"]:
+            for pi in range(len(cs._current_group()["params"])):
                 if pi == cs._param_map[cs._selected_param][1]:
                     screen_y = y - cs._scroll_offset
                     assert screen_y >= _VIEW_TOP, (

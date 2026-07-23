@@ -10,48 +10,6 @@ from game.presets import load_presets, apply_preset, save_user_preset
 SaveResult = namedtuple("SaveResult", ["status", "message"])
 
 
-class ParamGroup:
-    def __init__(self, name, params):
-        self.name = name
-        self.params = params
-
-
-class ConfigMenu:
-    def __init__(self, config):
-        self._config = config
-        self._groups = self._build_groups()
-        self._selected_group = 0
-        self._selected_param = 0
-        self._param_keys = list(self._groups[0].params.keys())
-
-    def _build_groups(self):
-        groups = {}
-        for name, default, min_val, max_val, group, label, _type, desc in PARAM_SPECS:
-            if group not in groups:
-                groups[group] = {}
-            groups[group][name] = (default, min_val, max_val, label, desc)
-        return [ParamGroup(name, params) for name, params in groups.items()]
-
-    def adjust_param(self, multiplier):
-        if not self._groups:
-            return
-        group = self._groups[self._selected_group]
-        key = self._param_keys[self._selected_param]
-        param_info = group.params[key]
-        default, min_val, max_val, _label, _desc = param_info
-
-        if isinstance(default, str) or default is None:
-            return
-
-        new_val = getattr(self._config, key) * multiplier
-        if min_val is not None:
-            new_val = max(min_val, new_val)
-        if max_val is not None:
-            new_val = min(max_val, new_val)
-        if isinstance(default, int):
-            new_val = int(new_val)
-        setattr(self._config, key, new_val)
-
 _FITNESS_OPTIONS = ["survival_only", "survival_clearance", "near_miss", "efficiency"]
 _GHOST_OPTIONS = ["off", "worst", "random", "top"]
 _CROSSOVER_OPTIONS = ["uniform", "single_point", "two_point"]
@@ -65,7 +23,7 @@ class ConfigScreen:
     def __init__(self, config, screen):
         self._config = config
         self._screen = screen
-        self._menu = ConfigMenu(config)
+        self._groups = self._build_groups()
         self._font = pygame.font.SysFont("monospace", 16)
         self._title_font = pygame.font.SysFont("monospace", 20, bold=True)
         self._running = True
@@ -91,10 +49,18 @@ class ConfigScreen:
         self._tour_step = 0
         self._tour_descriptions = self._load_tour_descriptions()
 
+    def _build_groups(self):
+        groups = {}
+        for name, default, min_val, max_val, group, label, _type, desc in PARAM_SPECS:
+            if group not in groups:
+                groups[group] = {}
+            groups[group][name] = (default, min_val, max_val, label, desc)
+        return [{"name": name, "params": params} for name, params in groups.items()]
+
     def _build_param_map(self):
         self._param_map = []
-        for gi, group in enumerate(self._menu._groups):
-            keys = list(group.params.keys())
+        for gi, group in enumerate(self._groups):
+            keys = list(group["params"].keys())
             for pi, key in enumerate(keys):
                 self._param_map.append((gi, pi, key))
 
@@ -130,7 +96,7 @@ class ConfigScreen:
             self._input_mode = False
             key_name = self._current_key()
             group = self._current_group()
-            default, min_val, max_val, _label, _desc = group.params[key_name]
+            default, min_val, max_val, _label, _desc = group["params"][key_name]
             try:
                 new_val = float(self._input_buffer) if self._input_buffer else 0
             except ValueError:
@@ -153,7 +119,7 @@ class ConfigScreen:
         elif key == pygame.K_PERIOD and "." not in self._input_buffer:
             key_name = self._current_key()
             group = self._current_group()
-            default, _min, _max, _label, _desc = group.params[key_name]
+            default, _min, _max, _label, _desc = group["params"][key_name]
             if isinstance(default, float):
                 self._input_buffer += "."
 
@@ -191,11 +157,11 @@ class ConfigScreen:
         row_h = 20
 
         y = _VIEW_TOP
-        group_names = sorted(set(g.name for g in self._menu._groups))
+        group_names = sorted(set(g["name"] for g in self._groups))
         for group_name in group_names:
             y += 24
-            if group_name == self._current_group().name:
-                for pi in range(len(self._current_group().params)):
+            if group_name == self._current_group()["name"]:
+                for pi in range(len(self._current_group()["params"])):
                     if pi == self._param_map[self._selected_param][1]:
                         screen_y = y - self._scroll_offset
                         if screen_y < _VIEW_TOP:
@@ -206,7 +172,7 @@ class ConfigScreen:
                     y += row_h
 
     def _current_group(self):
-        return self._menu._groups[self._selected_group]
+        return self._groups[self._selected_group]
 
     def _current_key(self):
         return self._param_map[self._selected_param][2]
@@ -235,7 +201,7 @@ class ConfigScreen:
                 self._confirming_preset = False
                 preset = self._presets[self._preset_index]
                 apply_preset(self._config, preset)
-                self._menu = ConfigMenu(self._config)
+                self._groups = self._build_groups()
                 self._build_param_map()
                 self._selected_group = 0
                 self._selected_param = 0
@@ -323,7 +289,7 @@ class ConfigScreen:
                         self._confirming_preset = True
                     else:
                         apply_preset(self._config, preset)
-                        self._menu = ConfigMenu(self._config)
+                        self._groups = self._build_groups()
                         self._build_param_map()
                         self._selected_group = 0
                         self._selected_param = 0
@@ -342,7 +308,7 @@ class ConfigScreen:
             if key == pygame.K_RETURN:
                 key_name = self._current_key()
                 group = self._current_group()
-                default, _min, _max, _label, _desc = group.params[key_name]
+                default, _min, _max, _label, _desc = group["params"][key_name]
                 if isinstance(default, str) or default is None:
                     self._adjust_param(1)
                 else:
@@ -370,7 +336,7 @@ class ConfigScreen:
     def _adjust_param(self, direction):
         key = self._current_key()
         group = self._current_group()
-        param_info = group.params[key]
+        param_info = group["params"][key]
         default, min_val, max_val, _label, _desc = param_info
 
         if isinstance(default, str):
@@ -432,8 +398,8 @@ class ConfigScreen:
 
         total = self._max_tour_step()
         gi, pi, param_key = self._param_map[self._tour_step]
-        group = self._menu._groups[gi]
-        default, min_val, max_val, label, _desc = group.params[param_key]
+        group = self._groups[gi]
+        default, min_val, max_val, label, _desc = group["params"][param_key]
         current = getattr(self._config, param_key)
         desc_text = self._tour_descriptions.get(param_key, _desc)
 
@@ -604,8 +570,8 @@ class ConfigScreen:
 
         if not self._compare_mode:
             y = _VIEW_TOP
-            group_names = sorted(set(g.name for g in self._menu._groups))
-            current_group_name = self._current_group().name
+            group_names = sorted(set(g["name"] for g in self._groups))
+            current_group_name = self._current_group()["name"]
 
             for group_name in group_names:
                 screen_y = y - self._scroll_offset
@@ -618,7 +584,7 @@ class ConfigScreen:
                 if group_name == current_group_name:
                     group = self._current_group()
                     selected_desc = ""
-                    for pi, (key, (default, min_val, max_val, label, desc)) in enumerate(group.params.items()):
+                    for pi, (key, (default, min_val, max_val, label, desc)) in enumerate(group["params"].items()):
                         param_idx = next(i for i, (gi, pii, k) in enumerate(self._param_map)
                                          if gi == self._selected_group and pii == pi)
                         selected = param_idx == self._selected_param and not self._focus_preset
