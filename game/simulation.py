@@ -25,7 +25,7 @@ class GameSimulation:
         self._genome = genome
         self._seed = seed
 
-    def run(self, per_frame_callback=None, observers=None):
+    def run(self, observers=None):
         observers = list(observers or [])
         seed = self._config.obstacle_seed if self._config.obstacle_seed is not None else self._seed
         np.random.seed(seed)
@@ -96,10 +96,6 @@ class GameSimulation:
 
             for observer in observers:
                 if observer(state) is False:
-                    return frame, time_alive
-
-            if per_frame_callback is not None:
-                if per_frame_callback(state, frame, time_alive) is False:
                     return frame, time_alive
 
             time_alive += dt

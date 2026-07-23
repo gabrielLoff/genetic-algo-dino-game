@@ -16,7 +16,7 @@ def _make_config(time_cap=0.05):
 
 
 class TestObserverProtocol:
-    def test_no_observers_no_callback_runs_silently(self):
+    def test_no_observers_runs_silently(self):
         config = _make_config(time_cap=0.05)
         genome = _make_genome()
         np.random.seed(42)
@@ -134,7 +134,7 @@ class TestObserverProtocol:
         sim.run(observers=[obs])
         assert obs.count > 0
 
-    def test_legacy_per_frame_callback_still_works(self):
+    def test_observer_receives_frame_and_time_alive(self):
         config = _make_config(time_cap=0.05)
         genome = _make_genome()
         np.random.seed(42)
@@ -142,53 +142,57 @@ class TestObserverProtocol:
 
         calls = []
 
-        def callback(state, frame, time_alive):
-            calls.append((frame, time_alive))
+        def observer(state):
+            calls.append((state.frame, state.time_alive))
             return None
 
-        sim.run(callback)
+        sim.run(observers=[observer])
         assert len(calls) > 0
 
-    def test_observers_and_callback_combined(self):
+    def test_multiple_observer_types_combined(self):
         config = _make_config(time_cap=0.05)
         genome = _make_genome()
         np.random.seed(42)
         sim = GameSimulation(config, genome, seed=42)
 
         observer_calls = []
-        callback_calls = []
 
         def observer(state):
             observer_calls.append(state)
             return None
 
-        def callback(state, frame, time_alive):
-            callback_calls.append((state, frame))
-            return None
+        class ObserverClass:
+            def __init__(self):
+                self.calls = []
 
-        sim.run(callback, observers=[observer])
+            def __call__(self, state):
+                self.calls.append(state)
+                return None
+
+        second = ObserverClass()
+        sim.run(observers=[observer, second])
         assert len(observer_calls) > 0
-        assert len(callback_calls) > 0
+        assert len(second.calls) > 0
 
-    def test_observer_can_stop_before_callback(self):
+    def test_observer_stops_before_later_observers(self):
         config = _make_config(time_cap=5.0)
         genome = _make_genome()
         np.random.seed(42)
         sim = GameSimulation(config, genome, seed=42)
 
-        callback_calls = []
+        second_calls = []
 
         def stop_after_2(state):
             if state.frame >= 2:
                 return False
             return None
 
-        def callback(state, frame, time_alive):
-            callback_calls.append(frame)
+        def second(state):
+            second_calls.append(state.frame)
             return None
 
-        sim.run(callback, observers=[stop_after_2])
-        assert max(callback_calls) <= 2
+        sim.run(observers=[stop_after_2, second])
+        assert max(second_calls) <= 2
 
     def test_frame_state_has_frame_and_time_alive(self):
         config = _make_config(time_cap=0.05)
