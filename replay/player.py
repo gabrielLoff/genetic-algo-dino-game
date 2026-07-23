@@ -76,8 +76,8 @@ class ReplayPlayer:
 
         render_background(self._screen, screen_w, screen_h)
 
-        ground_y = 320
         ground_h = 80
+        ground_y = screen_h - ground_h
 
         for side, (record, log, color_tint) in enumerate([
             (record0, log0, (255, 80, 80)),
@@ -118,8 +118,8 @@ class ReplayPlayer:
         screen_h = self._screen.get_height()
         render_background(self._screen, screen_w, screen_h)
 
-        ground_y = 320
         ground_h = 80
+        ground_y = screen_h - ground_h
         ground_offset = int(record.frame * record.game_speed / 60) % 800
         render_ground(self._screen, ground_y, ground_h, ground_offset)
 
