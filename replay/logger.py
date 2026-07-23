@@ -117,7 +117,7 @@ class GenerationArchive:
         gen = evolution.generation - 1
         ms = config.master_seed
         seed = derive_seed(ms, gen) if ms is not None else gen
-        fitness = evolution.history[-1]["best_fitness"]
+        fitness = evolution.history[-1].best_fitness
         log = record_run_to_log(
             evolution.best_genome, generation=gen,
             brain_index=0, config=config, seed=seed, fitness=fitness,

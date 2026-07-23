@@ -33,11 +33,11 @@ class DashboardWindow:
         self._ax_text.axis("off")
 
     def update(self, evolution):
-        generations = [r["generation"] for r in evolution.history]
-        bests = [r["best_fitness"] for r in evolution.history]
-        avgs = [r["avg_fitness"] for r in evolution.history]
-        cleared = [r.get("avg_cleared", 0.0) for r in evolution.history]
-        diversities = [r.get("diversity", 0.0) for r in evolution.history]
+        generations = [r.generation for r in evolution.history]
+        bests = [r.best_fitness for r in evolution.history]
+        avgs = [r.avg_fitness for r in evolution.history]
+        cleared = [r.avg_cleared for r in evolution.history]
+        diversities = [r.diversity for r in evolution.history]
         threshold = evolution._config.diversity_warning_threshold
 
         self._ax_fitness.clear()
@@ -56,10 +56,10 @@ class DashboardWindow:
             tier_labels = {0: "Easy", 1: "Normal", 2: "Hard"}
             prev_tier = None
             for i, r in enumerate(evolution.history):
-                tier = r.get("curriculum_tier", 0)
+                tier = r.curriculum_tier
                 if prev_tier is not None and tier != prev_tier:
                     label = f"{tier_labels[prev_tier]} -> {tier_labels[tier]}"
-                    self._ax_fitness.axvline(x=r["generation"], color="purple",
+                    self._ax_fitness.axvline(x=r.generation, color="purple",
                                              linestyle=":", alpha=0.6, label=label)
                 prev_tier = tier
 

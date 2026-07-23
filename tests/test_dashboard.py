@@ -5,6 +5,7 @@ import numpy as np
 import pytest
 import matplotlib
 from dashboard.window import DashboardWindow, Evolution, compute_genome_stats
+from ga.evolution import GenerationSnapshot
 
 
 def test_compute_genome_stats():
@@ -35,7 +36,8 @@ def test_dashboard_update_does_not_pause_event_loop():
     dashboard._ax_diversity = MagicMock()
     dashboard._ax_text = MagicMock()
     evolution = SimpleNamespace(
-        history=[{"generation": 0, "best_fitness": 1.0, "avg_fitness": 0.5}],
+        history=[GenerationSnapshot(generation=0, best_fitness=1.0, avg_fitness=0.5,
+                                     avg_cleared=0.0, diversity=0.0, curriculum_tier=0)],
         generation=0,
         best_fitness=1.0,
         best_genome=None,

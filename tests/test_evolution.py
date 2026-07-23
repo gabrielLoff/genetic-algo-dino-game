@@ -79,9 +79,9 @@ class TestEvolution:
         assert len(evolution.history) >= 2
 
         for record in evolution.history:
-            assert "best_fitness" in record
-            assert "avg_fitness" in record
-            assert "generation" in record
+            assert record.best_fitness is not None
+            assert record.avg_fitness is not None
+            assert record.generation is not None
 
     def test_evolution_stops_at_max_generations(self):
         config = self._make_config()
@@ -192,12 +192,11 @@ class TestDiversity:
         np.random.seed(42)
 
         evolution = Evolution(config)
-        assert "diversity" in evolution.history[-1]
+        assert evolution.history[-1].diversity >= 0.0
         while not evolution.is_finished():
             evolution.step()
         for record in evolution.history:
-            assert "diversity" in record
-            assert record["diversity"] >= 0.0
+            assert record.diversity >= 0.0
 
 
 class TestMutationAdaptation:

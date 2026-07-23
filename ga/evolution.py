@@ -1,4 +1,5 @@
 import hashlib
+from dataclasses import dataclass
 import numpy as np
 from ga.engine import (
     create_population,
@@ -51,6 +52,16 @@ def compute_weight_diff(old_genome, new_genome, hidden_size, input_size=5, num_h
         "total": o_len,
     }
     return groups
+
+
+@dataclass
+class GenerationSnapshot:
+    generation: int
+    best_fitness: float
+    avg_fitness: float
+    avg_cleared: float
+    diversity: float
+    curriculum_tier: int
 
 
 class Evolution:
@@ -172,15 +183,14 @@ class Evolution:
         else:
             self._plateau_count += 1
 
-        self.history.append({
-            "generation": self.generation,
-            "best_fitness": gen_best,
-            "avg_fitness": gen_avg,
-            "best_genome": self.population[best_idx].copy(),
-            "avg_cleared": avg_cleared,
-            "diversity": diversity,
-            "curriculum_tier": self._curriculum_tier,
-        })
+        self.history.append(GenerationSnapshot(
+            generation=self.generation,
+            best_fitness=gen_best,
+            avg_fitness=gen_avg,
+            avg_cleared=avg_cleared,
+            diversity=diversity,
+            curriculum_tier=self._curriculum_tier,
+        ))
         return fitnesses
 
     def _print_weight_diff(self, old_genome, new_genome, old_fitness, new_fitness):
@@ -206,7 +216,7 @@ class Evolution:
         if diversity is None:
             diversity = 0.0
             if self.history:
-                diversity = self.history[-1].get("diversity", 0.0)
+                diversity = self.history[-1].diversity
 
         if self._config.mutation_adaptation == "linear_decay":
             progress = self.generation / max(self._config.max_generations, 1)

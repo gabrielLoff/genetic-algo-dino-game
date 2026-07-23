@@ -22,12 +22,12 @@ def test_fitness_improves_over_five_generations_survival_clearance():
     np.random.seed(42)
     evolution = Evolution(config)
 
-    gen0_best = evolution.history[-1]["best_fitness"]
+    gen0_best = evolution.history[-1].best_fitness
     gen_bests = [gen0_best]
 
     while not evolution.is_finished():
         evolution.step()
-        gen_bests.append(evolution.history[-1]["best_fitness"])
+        gen_bests.append(evolution.history[-1].best_fitness)
 
     assert evolution.generation >= 5
     assert evolution.best_fitness > gen0_best, (
@@ -54,7 +54,7 @@ def test_fitness_improves_over_five_generations_survival_only():
     np.random.seed(7)
     evolution = Evolution(config)
 
-    gen0_best = evolution.history[-1]["best_fitness"]
+    gen0_best = evolution.history[-1].best_fitness
 
     while not evolution.is_finished():
         evolution.step()

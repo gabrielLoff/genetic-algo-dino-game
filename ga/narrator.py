@@ -11,10 +11,10 @@ def narrate_generation(evolution, config):
         return
 
     last = history[-1]
-    gen = last["generation"]
-    best = last["best_fitness"]
-    avg = last["avg_fitness"]
-    avg_cleared = last.get("avg_cleared", 0.0)
+    gen = last.generation
+    best = last.best_fitness
+    avg = last.avg_fitness
+    avg_cleared = last.avg_cleared
 
     best_time = best / max(config.game_speed_initial, 1)
     avg_time = avg / max(config.game_speed_initial, 1)
@@ -29,7 +29,7 @@ def narrate_generation(evolution, config):
     ]
 
     if gen > 0:
-        prev_best = history[0]["best_fitness"]
+        prev_best = history[0].best_fitness
         improvement = best - prev_best
         if improvement > 0:
             parts.append(f" Fitness has improved {improvement:.0f} points since generation 0.")
