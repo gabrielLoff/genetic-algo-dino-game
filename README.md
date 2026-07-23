@@ -17,15 +17,15 @@ python main.py
 ## What it does
 
 - A population of neural-network "brains" controls a dino in a side-scrolling obstacle course
-- Each brain's genome encodes the weights of a 3→H→1 feedforward NN
+- Each brain's genome encodes the weights of a 5→H→N feedforward NN (configurable inputs, hidden layers, and outputs)
 - Brains compete: survive longest → highest fitness → selected to breed
-- Tournament selection, uniform crossover, and Gaussian mutation produce each new generation
+- Tournament selection, configurable crossover (uniform, single-point, two-point), and Gaussian mutation produce each new generation
 - Configurable fitness functions: survival distance, obstacle clearance bonus, near-miss reward, jump efficiency penalty
 
 ## Running tests
 
 ```bash
-pytest tests/
+python -m pytest tests/ -v
 ```
 
 ## Configuration
@@ -62,6 +62,8 @@ Edit `config.json` to override defaults, or use the in-game config screen on sta
 | `Space` | Start evolution |
 | `Esc` | Quit |
 | `C` | Toggle **compare mode** |
+| `S` | Save current config as a preset |
+| `T` | Toggle **tour mode** (walkthrough of every parameter) |
 
 ### Compare mode
 
