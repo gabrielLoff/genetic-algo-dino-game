@@ -35,7 +35,7 @@ class Cactus:
     def is_off_screen(self):
         return self.x + self.width < 0
 
-    def hitbox(self):
+    def _local_hitbox(self):
         return inset_hitbox(self.x, 0, self.width, self.height, 0.15)
 
     def world_hitbox(self, ground_y):
@@ -57,7 +57,7 @@ class Pterodactyl:
     def is_off_screen(self):
         return self.x + self.width < 0
 
-    def hitbox(self):
+    def _local_hitbox(self):
         return inset_hitbox(self.x, 0, self.width, self.height, 0.1)
 
     def world_hitbox(self, ground_y):

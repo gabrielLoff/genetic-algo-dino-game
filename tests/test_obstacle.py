@@ -18,7 +18,7 @@ class TestCactus:
 
     def test_cactus_hitbox(self):
         c = Cactus(x=200, size=CACTUS_SIZE_SMALL)
-        hb = c.hitbox()
+        hb = c._local_hitbox()
         assert isinstance(hb, tuple)
         assert len(hb) == 4
 
@@ -141,7 +141,7 @@ class TestPterodactyl:
 
     def test_hitbox(self):
         p = Pterodactyl(x=200, height_level=PTERO_HEIGHT_LOW)
-        hb = p.hitbox()
+        hb = p._local_hitbox()
         assert isinstance(hb, tuple)
         assert len(hb) == 4
 

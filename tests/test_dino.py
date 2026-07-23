@@ -6,8 +6,7 @@ from game.obstacle import Cactus, CACTUS_SIZE_SMALL
 def test_dino_hitbox_collides_with_cactus():
     dino = Dino(ground_y=320, collision_inset=0.0)
     cactus = Cactus(x=80, size=CACTUS_SIZE_SMALL)
-    cactus_hb = (cactus.hitbox()[0], 320 - cactus.height,
-                 cactus.hitbox()[2], cactus.hitbox()[3])
+    cactus_hb = cactus.world_hitbox(320)
     assert aabb_collides(dino.hitbox(), cactus_hb)
 
 
