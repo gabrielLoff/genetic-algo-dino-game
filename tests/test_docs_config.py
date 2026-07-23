@@ -17,7 +17,7 @@ def _group_to_filename(group):
 def _params_by_group():
     groups = {}
     for spec in PARAM_SPECS:
-        name, _default, _min, _max, group, _label, _type, _desc = spec
+        name, _default, _min, _max, group, _label, _type, _desc, _options = spec
         groups.setdefault(group, []).append(name)
     return groups
 

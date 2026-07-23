@@ -10,11 +10,6 @@ from game.presets import load_presets, apply_preset, save_user_preset
 SaveResult = namedtuple("SaveResult", ["status", "message"])
 
 
-_FITNESS_OPTIONS = ["survival_only", "survival_clearance", "near_miss", "efficiency"]
-_GHOST_OPTIONS = ["off", "worst", "random", "top"]
-_CROSSOVER_OPTIONS = ["uniform", "single_point", "two_point"]
-_MUTATION_ADAPTATION_OPTIONS = ["none", "linear_decay", "diversity_driven"]
-
 _VIEW_TOP = 75
 _HINT_BASE = "SPACE=Start  ESC=Quit  ENTER=Edit  ARROWS=Navigate  LEFT/RIGHT=Adjust"
 
@@ -51,7 +46,7 @@ class ConfigScreen:
 
     def _build_groups(self):
         groups = {}
-        for name, default, min_val, max_val, group, label, _type, desc in PARAM_SPECS:
+        for name, default, min_val, max_val, group, label, _type, desc, _options in PARAM_SPECS:
             if group not in groups:
                 groups[group] = {}
             groups[group][name] = (default, min_val, max_val, label, desc)
@@ -368,14 +363,10 @@ class ConfigScreen:
         setattr(self._config, key, new_val)
 
     def _adjust_string_param(self, key, default, direction):
-        if key == "ghost_mode":
-            options = _GHOST_OPTIONS
-        elif key == "crossover_operator":
-            options = _CROSSOVER_OPTIONS
-        elif key == "mutation_adaptation":
-            options = _MUTATION_ADAPTATION_OPTIONS
-        else:
-            options = _FITNESS_OPTIONS
+        spec = next(s for s in PARAM_SPECS if s[0] == key)
+        options = spec[8]
+        if options is None:
+            return
         current = getattr(self._config, key)
         try:
             idx = options.index(current)
